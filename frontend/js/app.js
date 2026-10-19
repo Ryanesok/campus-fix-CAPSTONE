@@ -7,7 +7,7 @@ const KELAS_FASILITAS = ["AC", "Kursi", "Lampu", "Proyektor"];
 
 document.addEventListener("DOMContentLoaded", async () => {
     
-    // --- 1. PENGECEKAN AUTENTIKASI ---
+    // --- PENGECEKAN AUTENTIKASI ---
     const token = localStorage.getItem("campusfix_token");
     const role = localStorage.getItem("campusfix_role");
 
@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    // --- 2. LOGIKA LOGOUT ---
+    // --- LOGIKA LOGOUT ---
     const btnLogout = document.getElementById("btnLogoutUtama");
     if (btnLogout) {
         btnLogout.addEventListener("click", () => {
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    // --- 3. MUAT MODEL TENSORFLOW.JS (DI BROWSER) ---
+    // --- MUAT MODEL TENSORFLOW.JS ---
     try {
         aiModel = await tf.loadLayersModel('./assets/model/model.json');
         console.log("Model AI TF.js berhasil dimuat!");
@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.warn("Model AI belum tersedia atau path salah. Prediksi AI otomatis dilewati.", error);
     }
 
-    // --- 4. REFERENSI ELEMEN FORM ---
+    // --- REFERENSI ELEMEN FORM ---
     const fotoInput = document.getElementById("fotoFasilitas");
     const previewContainer = document.getElementById("previewContainer");
     const previewImage = document.getElementById("previewImage");
@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const formLaporan = document.getElementById("formLaporan");
     const btnKirim = document.getElementById("btnKirim");
 
-    // --- 5. LOGIKA UNGGAH FOTO & PREDIKSI AI (OFFLINE DI BROWSER) ---
+    // --- LOGIKA UNGGAH FOTO & PREDIKSI AI ---
     fotoInput.addEventListener("change", function(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Prediksi dijalankan SETELAH gambar selesai dimuat di HTML
         previewImage.onload = async () => {
             
-            // JIKA MODEL AI GAGAL DIMUAT (Misal: File model.json belum ada)
+            // JIKA MODEL AI GAGAL DIMUAT
             if (!aiModel) {
                 alertSaranAI.className = "alert alert-custom alert-warning py-3 px-4 mb-3 shadow-sm";
                 teksSaranAI.innerHTML = `<strong>Peringatan Sistem:</strong> Modul AI belum terpasang. Silakan pilih kategori secara manual.`;
@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 return;
             }
 
-            // JIKA MODEL AI ADA, LANJUT PREDIKSI
+            // JIKA MODEL AI ADA, LANJUT PREDICT
             loadingAI.classList.remove("d-none");
 
             try {
@@ -127,7 +127,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         };
     });
 
-    // --- 6. LOGIKA KIRIM LAPORAN KE BACKEND API PYTHON ---
+    // --- LOGIKA KIRIM LAPORAN KE BACKEND ---
     formLaporan.addEventListener("submit", async function(e) {
         e.preventDefault();
         
