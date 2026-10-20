@@ -31,3 +31,15 @@ where id = '<UUID_USER_ADMIN>';
 
 Jangan memberi role admin berdasarkan input dari frontend. Perubahan role hanya
 boleh dilakukan oleh anggota tim yang berwenang melalui database/dashboard.
+
+## Menjalankan frontend terintegrasi
+
+Dengan backend tetap berjalan pada port `8000`, buka terminal kedua:
+
+```powershell
+Set-Location G:\project\Web\campus-fix-CAPSTONE\frontend
+python -m http.server 5500
+```
+
+Buka `http://127.0.0.1:5500`. Jalankan migration terbaru dengan
+`python -m alembic upgrade head` agar kolom `reports.admin_note` tersedia.

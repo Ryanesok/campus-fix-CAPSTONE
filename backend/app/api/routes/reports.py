@@ -14,6 +14,13 @@ from app.services.storage import upload_report_photo
 router = APIRouter(prefix="/api", tags=["reports"])
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
 IMAGE_SIGNATURES = (b"\xff\xd8\xff", b"\x89PNG\r\n\x1a\n")
+CATEGORY_ALIASES = {
+    "ac": FacilityCategory.AC,
+    "kursi": FacilityCategory.KURSI,
+    "lampu": FacilityCategory.LAMPU,
+    "proyektor": FacilityCategory.PROYEKTOR,
+    "lainnya": FacilityCategory.LAINNYA,
+}
 
 
 def _is_allowed_image(data: bytes) -> bool:
@@ -29,13 +36,24 @@ def _get_report_or_404(report_id: UUID, db: Session) -> Report:
     return report
 
 
+def _parse_category(value: str, field_name: str) -> FacilityCategory:
+    category = CATEGORY_ALIASES.get(value.strip().casefold())
+    if category is None:
+        allowed = ", ".join(item.value for item in FacilityCategory)
+        raise HTTPException(
+            status_code=422,
+            detail=f"{field_name} tidak valid. Pilih salah satu: {allowed}.",
+        )
+    return category
+
+
 @router.post("/reports", response_model=ReportResponse, status_code=status.HTTP_201_CREATED)
 async def create_report(
     photo: UploadFile = File(...),
     location: str = Form(...),
     description: str = Form(...),
-    final_category: FacilityCategory = Form(...),
-    ai_category: FacilityCategory | None = Form(None),
+    category: str = Form(...),
+    ai_category: str | None = Form(None),
     current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> Report:
@@ -54,6 +72,8 @@ async def create_report(
         clean_description = validate_report_text(description, "Deskripsi", 5000)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+    final_category = _parse_category(category, "Kategori")
+    parsed_ai_category = _parse_category(ai_category, "Kategori AI") if ai_category else None
 
     report_id = uuid4()
     extension = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}[photo.content_type]
@@ -66,7 +86,7 @@ async def create_report(
         photo_path=photo_path,
         location=clean_location,
         description=clean_description,
-        ai_category=ai_category,
+        ai_category=parsed_ai_category,
         final_category=final_category,
         status=ReportStatus.PENDING,
     )
@@ -118,6 +138,7 @@ def update_report_status(
             detail=f"Status {report.status.value} tidak dapat diubah menjadi {update.status.value}.",
         )
     report.status = update.status
+    report.admin_note = update.admin_note
     db.commit()
     db.refresh(report)
     return report

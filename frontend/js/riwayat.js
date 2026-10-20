@@ -8,50 +8,53 @@ async function ambilRiwayatLaporan() {
     const listLaporan = document.getElementById("listLaporan");
     const loadingData = document.getElementById("loadingData");
     const dataKosong = document.getElementById("dataKosong");
+    const token = localStorage.getItem("campusfix_token");
 
     try {
-        // GET Request ke API riwayat laporan pelapor
+        if (!token) {
+            throw new Error("Token login tidak ditemukan. Silakan login kembali.");
+        }
+
         const response = await fetch(`${API_BASE_URL}/api/reports/me`, {
             method: "GET",
-            // Jika backend menerapkan Autentikasi JWT/Session, Header Authorization ditaruh di sini
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
         });
 
-        if (!response.ok) throw new Error("Gagal mengambil data dari server");
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(
+                errorData.detail || errorData.message || `Request gagal (${response.status})`
+            );
+        }
 
         const reports = await response.json();
-
-        // Hilangkan loading
         loadingData.classList.add("d-none");
 
-        // Cek jika array reports kosong
         if (!reports || reports.length === 0) {
             dataKosong.classList.remove("d-none");
             return;
         }
 
-        // Render setiap laporan ke dalam HTML
         reports.forEach(report => {
-            const cardHtml = buatCardLaporan(report);
-            listLaporan.innerHTML += cardHtml;
+            listLaporan.innerHTML += buatCardLaporan(report);
         });
-
     } catch (error) {
         console.error("Error Fetching Reports:", error);
         loadingData.innerHTML = `
             <div class="alert alert-danger rounded-4 py-4 text-center">
                 <i class="bi bi-exclamation-triangle fs-3 d-block mb-2"></i>
-                Gagal memuat data dari server. Pastikan backend server sudah berjalan.
+                ${error.message}
             </div>`;
     }
 }
 
-// Fungsi pembantu untuk membuat template Card HTML
 function buatCardLaporan(report) {
-    // Styling Badge berdasarkan status (Baru, Diverifikasi, Diproses, Selesai, Ditolak)
     let badgeClass = "bg-secondary";
     let iconClass = "bi-circle";
     const statusLower = report.status ? report.status.toLowerCase() : "baru";
-    
+
     if (statusLower === "baru") {
         badgeClass = "bg-info text-dark";
         iconClass = "bi-asterisk";
@@ -69,13 +72,12 @@ function buatCardLaporan(report) {
         iconClass = "bi-x-circle";
     }
 
-    // Format tanggal
     const tanggal = new Date(report.created_at || new Date()).toLocaleDateString("id-ID", {
         day: "numeric", month: "long", year: "numeric"
     });
-
-    // Handle foto fallback jika backend tidak mengirim URL valid
-    const fotoUrl = report.photo_url ? report.photo_url : "https://placehold.co/300x200?text=Tidak+Ada+Foto";
+    const fotoUrl = report.photo_url
+        ? report.photo_url
+        : "https://placehold.co/300x200?text=Tidak+Ada+Foto";
 
     return `
         <div class="card card-custom mb-4 overflow-hidden">
@@ -91,15 +93,12 @@ function buatCardLaporan(report) {
                                 <i class="bi ${iconClass} me-1"></i> ${report.status}
                             </span>
                         </div>
-                        
                         <p class="text-primary small fw-medium mb-2">
                             <i class="bi bi-geo-alt-fill me-1"></i> ${report.location}
                         </p>
-                        
                         <p class="card-text mb-3 text-secondary" style="font-size: 0.95rem;">
                             ${report.description}
                         </p>
-                        
                         <div class="d-flex justify-content-between align-items-center mt-auto pt-3 border-top">
                             <small class="text-muted">
                                 <i class="bi bi-calendar3 me-1"></i> Dilaporkan: ${tanggal}
@@ -107,7 +106,7 @@ function buatCardLaporan(report) {
                             ${report.admin_note ? `
                             <small class="text-danger fw-medium" title="Alasan Penolakan/Catatan Admin">
                                 <i class="bi bi-exclamation-circle-fill me-1"></i> ${report.admin_note}
-                            </small>` : ''}
+                            </small>` : ""}
                         </div>
                     </div>
                 </div>

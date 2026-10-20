@@ -1,56 +1,72 @@
 # Kontrak API
 
-Dokumentasi interaktif: `/docs` (Swagger) saat backend berjalan.
+Dokumentasi interaktif: `/docs` saat backend berjalan.
 
-## Sudah tersedia
+## Endpoint
+
 | Method | Path | Keterangan |
 |---|---|---|
 | GET | `/health` | Cek status layanan |
-| GET | `/api/auth/me` | Memvalidasi Bearer token dan mengembalikan user aktif |
-| POST | `/api/predictions` | Prediksi kategori dari satu foto (belum membuat laporan) |
+| POST | `/api/auth/login` | Login dengan email dan password |
+| POST | `/api/auth/register` | Registrasi pelapor |
+| GET | `/api/auth/me` | Memvalidasi token dan mengembalikan user aktif |
+| POST | `/api/predictions` | Prediksi kategori dari satu foto |
+| POST | `/api/reports` | Pelapor mengirim laporan |
+| GET | `/api/reports/me` | Pelapor melihat riwayat laporan sendiri |
+| GET | `/api/admin/reports` | Admin melihat semua laporan |
+| PATCH | `/api/admin/reports/{id}/status` | Admin memperbarui status laporan |
 
-### Autentikasi
+## Autentikasi
 
 Endpoint yang membutuhkan autentikasi menerima header:
 
 ```text
-Authorization: Bearer <access-token-supabase>
+Authorization: Bearer <access-token>
 ```
 
-`/api/auth/me` mengembalikan role dari `public.profiles`, bukan dari input
-frontend. Token diverifikasi melalui Supabase Auth.
+Login dan registrasi mengembalikan response yang dipakai frontend:
 
-### POST /api/predictions
-- Masukan: `multipart/form-data`, field `photo` (JPEG/PNG/WebP, maks. `MAX_UPLOAD_MB`).
-- Sukses 200:
+```json
+{
+  "token": "access-token",
+  "user": {
+    "id": "uuid-user",
+    "role": "reporter"
+  }
+}
+```
+
+Role selalu dibaca dari `public.profiles`, bukan dari input frontend.
+Role `admin` hanya dapat diberikan melalui database atau dashboard Supabase.
+
+## Prediksi
+
+Input menggunakan `multipart/form-data` dengan field `photo` (JPEG, PNG, atau
+WebP, maksimal `MAX_UPLOAD_MB`).
+
 ```json
 { "success": true, "prediction": { "category": "AC", "confidence": 0.92 } }
 ```
-- Error: `413` (terlalu besar), `415` (bukan gambar yang didukung), `422` (field `photo` tidak ada).
-- Saat ini memakai `MockClassifier`; diganti model asli pada Milestone 3.
 
 ## Laporan
-| Method | Path | Peran |
-|---|---|---|
-| POST | `/api/reports` | User terautentikasi: kirim laporan (foto, lokasi, deskripsi, kategori) |
-| GET | `/api/reports/me` | Pelapor: riwayat laporan sendiri |
-| GET | `/api/admin/reports` | Admin: daftar semua laporan |
-| PATCH | `/api/admin/reports/{id}/status` | Admin: `accepted` / `rejected` / `completed` |
 
-### POST /api/reports
+Input `POST /api/reports` menggunakan `multipart/form-data`:
 
-Masukan menggunakan `multipart/form-data`:
-
-- `photo`: satu JPEG/PNG/WebP, maksimal `MAX_UPLOAD_MB`.
-- `location`: lokasi manual, maksimal 255 karakter.
-- `description`: deskripsi kerusakan, maksimal 5000 karakter.
-- `final_category`: `AC`, `KURSI`, `LAMPU`, `PROYEKTOR`, atau `LAINNYA`.
+- `photo`: satu JPEG/PNG/WebP, maksimal `MAX_UPLOAD_MB`;
+- `location`: lokasi manual, maksimal 255 karakter;
+- `description`: deskripsi kerusakan, maksimal 5000 karakter;
+- `category`: `AC`, `KURSI`, `LAMPU`, `PROYEKTOR`, atau `LAINNYA`;
 - `ai_category`: opsional, hasil prediksi model.
 
-Foto disimpan sebagai objek private dengan path `<user-id>/<report-id>.<ext>`.
-Response awal memiliki status `pending`.
+Backend memetakan `category` dari frontend ke kolom database
+`final_category`. Response memiliki field `category`, `photo_url`,
+`admin_note`, `status`, dan metadata laporan.
 
-### Status laporan
+Status yang digunakan API:
+
+```text
+pending, accepted, rejected, completed
+```
 
 Transisi yang diperbolehkan:
 

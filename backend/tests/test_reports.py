@@ -5,6 +5,8 @@ from fastapi.testclient import TestClient
 from app.core.auth import CurrentUser, get_current_user
 from app.main import app
 from app.models import UserRole
+from app.api.routes.reports import _parse_category
+from app.models import FacilityCategory
 
 client = TestClient(app)
 
@@ -29,3 +31,8 @@ def test_admin_reports_rejects_reporter():
         app.dependency_overrides.clear()
 
     assert response.status_code == 403
+
+
+def test_frontend_category_values_are_normalized():
+    assert _parse_category("Kursi", "Kategori") is FacilityCategory.KURSI
+    assert _parse_category("PROYEKTOR", "Kategori") is FacilityCategory.PROYEKTOR

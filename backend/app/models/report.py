@@ -34,6 +34,7 @@ class Report(Base):
     photo_path: Mapped[str] = mapped_column(String(500), nullable=False)
     location: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=False)
+    admin_note: Mapped[str | None] = mapped_column(Text, nullable=True)
     ai_category: Mapped[FacilityCategory | None] = mapped_column(
         SqlEnum(
             FacilityCategory,
@@ -65,3 +66,11 @@ class Report(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )
+
+    @property
+    def category(self) -> FacilityCategory:
+        return self.final_category
+
+    @property
+    def photo_url(self) -> str:
+        return ""

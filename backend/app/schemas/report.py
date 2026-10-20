@@ -14,6 +14,9 @@ class ReportResponse(BaseModel):
     photo_path: str
     location: str
     description: str
+    category: FacilityCategory
+    photo_url: str | None
+    admin_note: str | None
     ai_category: FacilityCategory | None
     final_category: FacilityCategory
     status: ReportStatus
@@ -23,6 +26,7 @@ class ReportResponse(BaseModel):
 
 class ReportStatusUpdate(BaseModel):
     status: ReportStatus
+    admin_note: str | None = None
 
 
 def validate_report_text(value: str, field_name: str, max_length: int) -> str:
