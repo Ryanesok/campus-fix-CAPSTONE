@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Riwayat Laporan - CampusFix</title>
+    <title>Dashboard Pelapor - CampusFix</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -25,6 +25,12 @@
         .card-custom:hover {
             transform: translateY(-3px);
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card {
+            border-radius: 1rem;
+            border: none;
+            color: #fff;
         }
 
         .status-badge {
@@ -67,30 +73,67 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
+    <!-- Konten Utama Dashboard -->
     <div class="container mb-5" style="max-width: 900px;">
+        
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="fw-bold text-dark mb-0">Riwayat Laporan Saya</h4>
+            <h4 class="fw-bold text-dark mb-0">Dashboard Laporan Saya</h4>
         </div>
 
-        <!-- Area Data Laporan -->
-        <div id="laporanContainer">
+        <!-- Indikator Loading Global -->
+        <div id="loadingData" class="text-center py-5 text-muted">
+            <div class="spinner-border text-primary mb-3" role="status"></div>
+            <p>Memuat data dashboard...</p>
+        </div>
+
+        <!-- Kontainer Dashboard -->
+        <div id="dashboardContent" class="d-none">
             
-            <!-- Indikator Loading -->
-            <div id="loadingData" class="text-center py-5 text-muted">
-                <div class="spinner-border text-primary mb-3" role="status"></div>
-                <p>Memuat riwayat laporan...</p>
+            <!-- Statistik Laporan -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <div class="card stat-card bg-primary shadow-sm h-100">
+                        <div class="card-body">
+                            <h6 class="mb-1 fw-normal opacity-75"><i class="bi bi-files me-1"></i> Total</h6>
+                            <h3 class="fw-bold mb-0" id="statTotal">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card stat-card bg-warning shadow-sm h-100 text-dark">
+                        <div class="card-body">
+                            <h6 class="mb-1 fw-normal opacity-75"><i class="bi bi-hourglass-split me-1"></i> Diproses</h6>
+                            <h3 class="fw-bold mb-0" id="statProses">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card stat-card bg-success shadow-sm h-100">
+                        <div class="card-body">
+                            <h6 class="mb-1 fw-normal opacity-75"><i class="bi bi-check2-all me-1"></i> Selesai</h6>
+                            <h3 class="fw-bold mb-0" id="statSelesai">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <div class="card stat-card bg-danger shadow-sm h-100">
+                        <div class="card-body">
+                            <h6 class="mb-1 fw-normal opacity-75"><i class="bi bi-x-circle me-1"></i> Ditolak</h6>
+                            <h3 class="fw-bold mb-0" id="statDitolak">0</h3>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Tampilan Jika Data Kosong -->
-            <div id="dataKosong" class="text-center py-5 d-none bg-white rounded-4 shadow-sm">
+            <div id="dataKosong" class="text-center py-5 d-none bg-white rounded-4 shadow-sm mb-4">
                 <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
                 <h5 class="fw-bold text-dark">Belum Ada Laporan</h5>
                 <p class="text-muted mb-4">Kamu belum pernah membuat laporan kerusakan fasilitas.</p>
                 <a href="../index.html" class="btn btn-outline-primary rounded-pill px-4">Buat Laporan Pertama</a>
             </div>
 
-            <!-- Tempat Render Card Laporan -->
+            <h5 class="fw-bold text-dark mb-3 mt-2">Riwayat Detail</h5>
             <div id="listLaporan"></div>
             
         </div>
