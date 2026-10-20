@@ -3,6 +3,86 @@
 Dokumen ini adalah acuan integrasi untuk Campus Fix. Backend berjalan di
 `http://127.0.0.1:8000` saat development.
 
+## Environment variables
+
+### Frontend
+
+Frontend membutuhkan hanya nilai publik berikut:
+
+```env
+BACKEND_API_URL=http://127.0.0.1:8000
+SUPABASE_URL=https://project-ref.supabase.co
+SUPABASE_ANON_KEY=publishable-or-anon-key
+```
+
+Nama variabel harus mengikuti framework frontend:
+
+- Vite: `VITE_BACKEND_API_URL`, `VITE_SUPABASE_URL`,
+  `VITE_SUPABASE_ANON_KEY`.
+- Next.js: `NEXT_PUBLIC_BACKEND_API_URL`, `NEXT_PUBLIC_SUPABASE_URL`,
+  `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- HTML/JavaScript tanpa bundler: jangan membuat `.env` yang dibaca browser;
+  gunakan konfigurasi runtime atau file konfigurasi publik yang tidak berisi
+  secret.
+
+Nilai `SUPABASE_URL` dan anon/publishable key memang boleh berada di frontend.
+Keduanya bukan secret. Namun, `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL`, dan
+password database tidak boleh pernah berada di frontend.
+
+Contoh `.env.example` untuk frontend berbasis Vite:
+
+```env
+VITE_BACKEND_API_URL=http://127.0.0.1:8000
+VITE_SUPABASE_URL=https://project-ref.supabase.co
+VITE_SUPABASE_ANON_KEY=
+```
+
+File `.env` frontend tetap harus di-ignore Git. Commit hanya `.env.example`.
+
+### Backend
+
+Backend menggunakan environment di
+[`backend/.env.example`](../backend/.env.example):
+
+```env
+APP_ENV=development
+CORS_ORIGINS=http://localhost:5500,http://127.0.0.1:5500
+SUPABASE_URL=https://project-ref.supabase.co
+SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_STORAGE_BUCKET=report-photos
+DATABASE_URL=postgresql+psycopg://...
+MAX_UPLOAD_MB=5
+```
+
+`SUPABASE_SERVICE_ROLE_KEY` hanya digunakan oleh backend untuk Storage private.
+Jangan menyalin file backend `.env` ke frontend.
+
+### AI
+
+Model AI berjalan di dalam backend, bukan di browser. Karena itu tim AI tidak
+perlu mengelola Supabase key atau database credential. Minimal, tim AI perlu
+menyerahkan:
+
+- artefak model;
+- preprocessing;
+- versi Python dan library;
+- ukuran input;
+- mapping label;
+- confidence;
+- metrik evaluasi.
+
+Lokasi model yang diharapkan:
+
+```text
+backend/app/ai/models/
+```
+
+Folder tersebut di-ignore Git. Jika implementasi classifier membutuhkan
+konfigurasi runtime seperti lokasi file model, tambahkan variabel backend
+seperti `AI_MODEL_PATH` ke `backend/.env.example`; jangan membuat env AI yang
+berisi credential Supabase.
+
 ## Menjalankan backend
 
 ```powershell
