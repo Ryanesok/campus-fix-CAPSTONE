@@ -17,3 +17,9 @@ Jika memakai Next.js, gunakan prefix `NEXT_PUBLIC_`. Jangan memasukkan
 
 Lihat [`docs/FRONTEND_AI_HANDOFF.md`](../docs/FRONTEND_AI_HANDOFF.md) untuk
 kontrak endpoint, autentikasi, upload foto, dan integrasi AI.
+
+# Command Untuk Login Via Inspect - Console (Pelapor)
+localStorage.setItem('campusfix_token', 'dummy-token'); localStorage.setItem('campusfix_role', 'pelapor'); window.location.href = '../index.html';
+
+# Command Untuk Login Via Inspect - Console (Admin)
+localStorage.setItem('campusfix_token', 'dummy-token'); localStorage.setItem('campusfix_role', 'admin'); window.location.href = 'admin.html';
