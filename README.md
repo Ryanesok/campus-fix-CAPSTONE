@@ -22,6 +22,9 @@ frontend/  Antarmuka web
 docs/      API, database, integrasi AI, panduan pengembangan
 ```
 
+Panduan integrasi lengkap untuk frontend dan tim AI tersedia di
+[`docs/FRONTEND_AI_HANDOFF.md`](docs/FRONTEND_AI_HANDOFF.md).
+
 ## Menjalankan backend
 ```bash
 cd backend
