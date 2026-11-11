@@ -1,9 +1,10 @@
+import { 
+    loadFacilityModel, 
+    predictFacilityFromImage 
+} from '../ai-module/index.js';
+
 // Base URL Backend API Python
 const API_BASE_URL = "http://127.0.0.1:8000";
-
-// Variabel Model TF.js
-let aiModel = null;
-const KELAS_FASILITAS = ["AC", "Kursi", "Lampu", "Proyektor"];
 
 document.addEventListener("DOMContentLoaded", async () => {
     
@@ -31,10 +32,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    // --- MUAT MODEL TENSORFLOW.JS ---
+    let aiModelReady = false;
     try {
-        aiModel = await tf.loadLayersModel('./assets/model/model.json');
-        console.log("Model AI TF.js berhasil dimuat!");
+        console.log("Memuat model AI...");
+        await loadFacilityModel('./model/tfjs_graph_model/model.json');
+        console.log("Model AI berhasil dimuat!");
+        aiModelReady = true;
     } catch (error) {
         console.warn("Model AI belum tersedia atau path salah. Prediksi AI otomatis dilewati.", error);
     }
@@ -74,7 +77,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         previewImage.onload = async () => {
             
             // JIKA MODEL AI GAGAL DIMUAT
-            if (!aiModel) {
+            if (!aiModelReady) {
                 alertSaranAI.className = "alert alert-custom alert-warning py-3 px-4 mb-3 shadow-sm";
                 teksSaranAI.innerHTML = `<strong>Peringatan Sistem:</strong> Modul AI belum terpasang. Silakan pilih kategori secara manual.`;
                 alertSaranAI.classList.remove("d-none");
@@ -88,20 +91,17 @@ document.addEventListener("DOMContentLoaded", async () => {
             loadingAI.classList.remove("d-none");
 
             try {
-                const tensor = tf.browser.fromPixels(previewImage)
-                    .resizeNearestNeighbor([224, 224])
-                    .toFloat()
-                    .expandDims();
-
-                const predictions = await aiModel.predict(tensor).data();
+                // Memanggil fungsi prediksi utama dari facility_predictor.js
+                const hasilPrediksi = await predictFacilityFromImage(previewImage);
                 
-                const highestIndex = predictions.indexOf(Math.max(...predictions));
-                const category = KELAS_FASILITAS[highestIndex];
-                const confidence = predictions[highestIndex];
+                // Asumsi modul mereturn object dengan struktur { category, confidence }
+                const category = hasilPrediksi.predictedCategory;
+                const confidence = hasilPrediksi.topScore;
                 const persen = (confidence * 100).toFixed(0);
 
                 teksSaranAI.innerHTML = `Saran AI: <strong>${category}</strong> (Keyakinan: ${persen}%)`;
                 
+                // threshold 60% sebagai batas keyakinan
                 if (confidence >= 0.6) {
                     alertSaranAI.className = "alert alert-custom alert-success py-3 px-4 mb-3 shadow-sm";
                     kategoriFinal.value = category; 
@@ -112,12 +112,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
 
                 alertSaranAI.classList.remove("d-none");
-                tensor.dispose();
 
             } catch (error) {
-                console.error("TF.js Error:", error);
+                console.error("Kesalahan Prediksi AI:", error);
                 alertSaranAI.className = "alert alert-custom alert-danger py-3 px-4 mb-3 shadow-sm";
-                teksSaranAI.innerHTML = `Gagal memproses gambar. Silakan pilih kategori secara manual.`;
+                teksSaranAI.innerHTML = `Gagal memproses gambar dengan AI. Silakan pilih kategori secara manual.`;
                 alertSaranAI.classList.remove("d-none");
             } finally {
                 loadingAI.classList.add("d-none");
