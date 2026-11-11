@@ -1,0 +1,55 @@
+{
+  "source_saved_model": "model/original/saved_model",
+  "source_keras_sha256": "fa80146b2da80963cea2adf8349fe133315ab0aa19d5bdd6c62b5aff824cb2c5",
+  "output_directory": "model/tfjs_graph_model",
+  "converter_command": "tensorflowjs_converter --input_format=tf_saved_model --output_format=tfjs_graph_model --signature_name=serving_default --saved_model_tags=serve model/original/saved_model model/tfjs_graph_model",
+  "environment": {
+    "venv": ".venv-tfjs",
+    "python": "3.10.0",
+    "platform": "Windows-10-10.0.26300-SP0",
+    "tensorflow": "2.20.0",
+    "tf_keras": "2.20.1",
+    "tensorflowjs": "4.22.0"
+  },
+  "signature": {
+    "input_name": "image_rgb_0_255:0",
+    "input_shape": [
+      -1,
+      224,
+      224,
+      3
+    ],
+    "input_dtype": "float32",
+    "input_range": "0..255 (Rescaling 1/127.5 offset -1 inside model)",
+    "output_name": "Identity:0",
+    "output_shape": [
+      -1,
+      4
+    ],
+    "class_names": [
+      "AC",
+      "Kursi",
+      "Lampu",
+      "Proyektor"
+    ]
+  },
+  "artifacts": {
+    "group1-shard1of3.bin": {
+      "size_bytes": 4194304,
+      "sha256": "27ad367a97bc0961c204ee415a35e40314c5fba97e25d9f78098713d53cc178f"
+    },
+    "group1-shard2of3.bin": {
+      "size_bytes": 4194304,
+      "sha256": "6058794c00b9b5c0a79bfc435612f381dd40bbbe1d4bbbb50d78a1f3725cd9d1"
+    },
+    "group1-shard3of3.bin": {
+      "size_bytes": 487840,
+      "sha256": "0f947b6d40d9774afbd7fdb9f0806a596b3dc9e587fce9719c7cc8c54bdf4a2c"
+    },
+    "model.json": {
+      "size_bytes": 144118,
+      "sha256": "d9c62c756cd6b856be1e6ec7999fba0fdfeede3e4a21b4a613510aa63519270e"
+    }
+  },
+  "total_size_bytes": 9020566
+}
