@@ -8,7 +8,13 @@ async function ambilRiwayatLaporan() {
     const listLaporan = document.getElementById("listLaporan");
     const loadingData = document.getElementById("loadingData");
     const dataKosong = document.getElementById("dataKosong");
+    const dashboardContent = document.getElementById("dashboardContent");
     const token = localStorage.getItem("campusfix_token");
+
+    const statTotal = document.getElementById("statTotal");
+    const statProses = document.getElementById("statProses");
+    const statSelesai = document.getElementById("statSelesai");
+    const statDitolak = document.getElementById("statDitolak");
 
     try {
         if (!token) {
@@ -37,9 +43,32 @@ async function ambilRiwayatLaporan() {
             return;
         }
 
+        if (dashboardContent) dashboardContent.classList.remove("d-none");
+
+        let countTotal = reports.length;
+        let countProses = 0;
+        let countSelesai = 0;
+        let countDitolak = 0;
+
         reports.forEach(report => {
+            const statusLower = report.status ? report.status.toLowerCase() : "baru";
+
+            if (statusLower === "baru" || statusLower === "diverifikasi" || statusLower === "diproses") {
+                countProses++;
+            } else if (statusLower === "selesai") {
+                countSelesai++;
+            } else if (statusLower === "ditolak") {
+                countDitolak++;
+            }
+
             listLaporan.innerHTML += buatCardLaporan(report);
         });
+
+        if (statTotal) statTotal.textContent = countTotal;
+        if (statProses) statProses.textContent = countProses;
+        if (statSelesai) statSelesai.textContent = countSelesai;
+        if (statDitolak) statDitolak.textContent = countDitolak;
+
     } catch (error) {
         console.error("Error Fetching Reports:", error);
         loadingData.innerHTML = `
@@ -80,7 +109,7 @@ function buatCardLaporan(report) {
         : "https://placehold.co/300x200?text=Tidak+Ada+Foto";
 
     return `
-        <div class="card card-custom mb-4 overflow-hidden">
+        <div class="card card-custom mb-4 overflow-hidden border">
             <div class="row g-0">
                 <div class="col-md-3">
                     <img src="${fotoUrl}" class="img-fluid w-100 img-laporan" alt="Foto Fasilitas">

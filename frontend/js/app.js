@@ -1,3 +1,8 @@
+import { 
+    loadFacilityModel, 
+    predictFacilityFromImage 
+} from '../ai-module/index.js';
+
 // Base URL Backend API Python
 const API_BASE_URL = "http://127.0.0.1:8000";
 

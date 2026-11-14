@@ -1,8 +1,9 @@
 const API_BASE_URL = "http://127.0.0.1:8000";
-let semuaDataLaporan = []; // Variabel global untuk menyimpan data sementara agar mudah difilter
+
+let semuaDataLaporan = []; 
 
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. Cek Autentikasi
+
     const token = localStorage.getItem("campusfix_token");
     const role = localStorage.getItem("campusfix_role");
     
@@ -12,13 +13,10 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
     }
 
-    // 2. Inisialisasi
     ambilSemuaLaporan();
 
-    // 3. Event Listener Filter
     document.getElementById("filterStatus").addEventListener("change", filterTabelLaporan);
 
-    // 4. Event Listener Logika Dropdown Tindakan (Tampilkan alasan tolak)
     const selectTindakan = document.getElementById("selectTindakan");
     const wadahAlasanTolak = document.getElementById("wadahAlasanTolak");
     const inputAlasanTolak = document.getElementById("inputAlasanTolak");
@@ -34,10 +32,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 5. Event Listener Submit Pembaruan Status
     document.getElementById("formProsesLaporan").addEventListener("submit", prosesPembaruanStatus);
 
-    // 6. Logout
     document.getElementById("btnLogout").addEventListener("click", () => {
         localStorage.removeItem("campusfix_token");
         localStorage.removeItem("campusfix_role");
@@ -45,14 +41,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-// --- FUNGSI MENGAMBIL DATA ---
+// --- AMBIL DATA ---
 async function ambilSemuaLaporan() {
     const tbodyLaporan = document.getElementById("tbodyLaporan");
-    const loadingRow = document.getElementById("loadingRow");
+    const dataKosongRow = document.getElementById("dataKosongRow");
     
-    tbodyLaporan.innerHTML = "";
-    loadingRow.classList.remove("d-none");
-    document.getElementById("dataKosongRow").classList.add("d-none");
+    // Mengganti isi tabel dengan animasi loading setiap kali fungsi dipanggil
+    tbodyLaporan.innerHTML = `
+        <tr id="loadingRow">
+            <td colspan="5" class="text-center py-5 text-muted">
+                <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+                <br>Memuat data laporan...
+            </td>
+        </tr>
+    `;
+    dataKosongRow.classList.add("d-none");
 
     try {
         const response = await fetch(`${API_BASE_URL}/api/admin/reports`, {
@@ -65,15 +68,12 @@ async function ambilSemuaLaporan() {
         if (!response.ok) throw new Error("Gagal mengambil data laporan");
 
         semuaDataLaporan = await response.json();
-        
-        // Render data ke tabel
+
         renderTabel(semuaDataLaporan);
 
     } catch (error) {
         console.error("Error Fetching Admin Reports:", error);
         tbodyLaporan.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-danger">Terjadi kesalahan saat memuat data.</td></tr>`;
-    } finally {
-        loadingRow.classList.add("d-none");
     }
 }
 
@@ -126,7 +126,7 @@ function renderTabel(dataArray) {
 }
 
 function filterTabelLaporan(e) {
-    const keywordStatus = e.target.value; // "semua", "baru", "accepted", "completed", "rejected"
+    const keywordStatus = e.target.value; 
     
     if (keywordStatus === "semua") {
         renderTabel(semuaDataLaporan);
@@ -157,9 +157,6 @@ function bukaModalProses(reportDataEncoded) {
     document.getElementById("formProsesLaporan").reset();
     document.getElementById("wadahAlasanTolak").classList.add("d-none");
     document.getElementById("alertProses").classList.add("d-none");
-    
-    // Jika statusnya sudah selesai/ditolak, mungkin admin hanya melihat saja (opsional)
-    // Tapi saya biarkan admin mengubah status jika perlu.
 
     // Tampilkan Modal
     const modalInstance = new bootstrap.Modal(document.getElementById('modalProsesLaporan'));
@@ -180,11 +177,10 @@ async function prosesPembaruanStatus(e) {
     alertProses.classList.add("d-none");
 
     try {
-        // Payload sesuai kontrak API
         const payload = {
             status: newStatus
         };
-        // Tambahkan alasan jika ditolak
+        
         if (newStatus === "rejected") {
             payload.admin_note = adminNote;
         }
@@ -199,12 +195,10 @@ async function prosesPembaruanStatus(e) {
         });
 
         if (response.ok) {
-            // Tutup modal secara programatis
             const modalEl = document.getElementById('modalProsesLaporan');
             const modalInstance = bootstrap.Modal.getInstance(modalEl);
             modalInstance.hide();
-            
-            // Refresh tabel
+
             ambilSemuaLaporan();
         } else {
             const errData = await response.json();
