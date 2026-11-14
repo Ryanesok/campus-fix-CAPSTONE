@@ -1,27 +1,118 @@
+# ==========================================
 # Python
+# ==========================================
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
+.eggs/
+build/
+dist/
+develop-eggs/
+downloads/
+eggs/
+parts/
+sdist/
+var/
+wheels/
+*.egg
+*.manifest
+*.spec
+
+# ==========================================
+# Virtual Environments
+# ==========================================
 .venv/
 venv/
-# Environment and secrets
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ==========================================
+# Environment Variables & Secrets
+# ==========================================
 .env
 .env.*
 !.env.example
-# Testing
+!.env.template
+*.pem
+*.key
+*.cert
+
+# ==========================================
+# Testing, Coverage & Linters
+# ==========================================
 .pytest_cache/
 .coverage
+.coverage.*
+coverage.xml
+*.cover
 htmlcov/
-# IDE / OS
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
-# AI artifacts and datasets
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+
+# ==========================================
+# Databases & Local Storage
+# ==========================================
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# ==========================================
+# AI / ML Datasets & Heavy Checkpoints
+# ==========================================
 backend/app/ai/models/
 backend/app/ai/datasets/
+ai/datasets/
+ai/data/
+datasets/
+data/
 *.pkl
 *.joblib
-# Uploads and logs
+*.h5
+*.hdf5
+*.pt
+*.pth
+*.onnx
+*.tflite
+
+# ==========================================
+# Uploads, Media & Logs
+# ==========================================
 uploads/
+backend/uploads/
+logs/
 *.log
+temp/
+tmp/
+*.tmp
+
+# ==========================================
+# Node.js / Frontend Tools
+# ==========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# ==========================================
+# IDE & Operating System
+# ==========================================
+.vscode/
+*.code-workspace
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+desktop.ini
