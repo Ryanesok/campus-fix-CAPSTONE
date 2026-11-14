@@ -138,13 +138,13 @@
                             <label for="lokasi" class="form-label">
                                 <i class="bi bi-geo-alt me-1"></i> 3. Lokasi Detail
                             </label>
-                            <input type="text" class="form-control form-control-custom" id="lokasi" placeholder="Contoh: Gedung A, Lantai 1, Ruang 101" required>
+                            <input type="text" class="form-control form-control-custom" id="lokasi" maxlength="255" placeholder="Contoh: Gedung A, Lantai 1, Ruang 101" required>
                         </div>
                         <div class="mb-4">
                             <label for="deskripsi" class="form-label">
                                 <i class="bi bi-card-text me-1"></i> 4. Deskripsi Kerusakan
                             </label>
-                            <textarea class="form-control form-control-custom" id="deskripsi" rows="3" placeholder="Jelaskan kondisi kerusakan yang terjadi..." required></textarea>
+                            <textarea class="form-control form-control-custom" id="deskripsi" rows="3" maxlength="5000" placeholder="Jelaskan kondisi kerusakan yang terjadi..." required></textarea>
                         </div>
                         
                         <button type="submit" class="btn btn-primary btn-custom w-100 fw-bold fs-6 mt-2" id="btnKirim">
