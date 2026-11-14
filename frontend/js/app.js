@@ -1,10 +1,7 @@
-import { 
-    loadFacilityModel, 
-    predictFacilityFromImage 
-} from '../ai-module/index.js';
-
 // Base URL Backend API Python
 const API_BASE_URL = "http://127.0.0.1:8000";
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 document.addEventListener("DOMContentLoaded", () => {
     
@@ -20,6 +17,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (role === "admin") {
         window.location.href = "pages/admin.html";
         return;
+    }
+
+    // Helper untuk menangani sesi habis (401)
+    function handleUnauthorized() {
+        localStorage.removeItem("campusfix_token");
+        localStorage.removeItem("campusfix_role");
+        alert("Sesi login Anda telah berakhir. Silakan login kembali.");
+        window.location.href = "pages/login.html";
     }
 
     // --- LOGIKA LOGOUT ---
@@ -48,11 +53,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnKirim = document.getElementById("btnKirim");
 
     let lastAiCategory = null;
+    let currentObjectUrl = null;
 
     // --- LOGIKA UNGGAH FOTO & PEMANGGILAN API PREDIKSI AI DARI BACKEND ---
     fotoInput.addEventListener("change", async function(e) {
         const file = e.target.files[0];
         if (!file) return;
+
+        // Validasi format & ukuran file sebelum diproses
+        if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+            alert("Format foto tidak didukung. Gunakan file JPEG, PNG, atau WebP.");
+            fotoInput.value = "";
+            return;
+        }
+
+        if (file.size > MAX_UPLOAD_BYTES) {
+            alert("Ukuran foto melebihi batas maksimum 5 MB.");
+            fotoInput.value = "";
+            return;
+        }
 
         // Reset UI saat foto baru dipilih
         kategoriContainer.classList.add("d-none");
@@ -62,8 +81,11 @@ document.addEventListener("DOMContentLoaded", () => {
         lastAiCategory = null;
         
         // Tampilkan foto di browser
-        const objectUrl = URL.createObjectURL(file);
-        previewImage.src = objectUrl;
+        if (currentObjectUrl) {
+            URL.revokeObjectURL(currentObjectUrl);
+        }
+        currentObjectUrl = URL.createObjectURL(file);
+        previewImage.src = currentObjectUrl;
         previewContainer.classList.remove("d-none");
         loadingAI.classList.remove("d-none");
 
@@ -74,36 +96,48 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const response = await fetch(`${API_BASE_URL}/api/predictions`, {
                 method: "POST",
-                headers: token ? { "Authorization": `Bearer ${token}` } : {},
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                },
                 body: formData
             });
+
+            if (response.status === 401) {
+                handleUnauthorized();
+                return;
+            }
 
             if (response.ok) {
                 const data = await response.json();
                 const prediction = data.prediction || {};
-                const rawCategory = prediction.category || "";
+                const rawCategory = (prediction.category || "").trim();
                 const confidence = typeof prediction.confidence === "number" ? prediction.confidence : 0;
                 const persen = Math.round(confidence * 100);
 
-                // Sinkronisasi pemetaan kategori dengan opsi form dropdown
-                const categoryMap = {
+                const displayLabelMap = {
                     "AC": "AC",
                     "KURSI": "Kursi",
                     "LAMPU": "Lampu",
-                    "PROYEKTOR": "Proyektor",
-                    "Kursi": "Kursi",
-                    "Lampu": "Lampu",
-                    "Proyektor": "Proyektor"
+                    "PROYEKTOR": "Proyektor"
                 };
-                const matchedCategory = categoryMap[rawCategory] || categoryMap[rawCategory.toUpperCase()] || rawCategory;
-                lastAiCategory = matchedCategory;
 
-                teksSaranAI.innerHTML = `Saran AI: <strong>${matchedCategory}</strong> (Keyakinan: ${persen}%)`;
+                const upperCategory = rawCategory.toUpperCase();
+                const displayLabel = displayLabelMap[upperCategory] || "";
+
+                // Simpan dalam format UPPERCASE
+                if (displayLabel) {
+                    lastAiCategory = upperCategory;
+                }
+
+                teksSaranAI.innerHTML = `Saran AI: <strong>${displayLabel || rawCategory}</strong> (Keyakinan: ${persen}%)`;
                 
-                // Jika confidence >= 60%, sistem memilih otomatis
-                if (confidence >= 0.6) {
+                // Jika confidence >= 60%, sistem memilih otomatis di dropdown
+                if (confidence >= 0.6 && displayLabel) {
                     alertSaranAI.className = "alert alert-custom alert-success py-3 px-4 mb-3 shadow-sm";
-                    kategoriFinal.value = matchedCategory; 
+                    
+                    // Cek apakah <option> di HTML memakai UPPERCASE atau Title Case
+                    const hasUpperOption = Boolean(kategoriFinal.querySelector(`option[value="${upperCategory}"]`));
+                    kategoriFinal.value = hasUpperOption ? upperCategory : displayLabel;
                 } else {
                     alertSaranAI.className = "alert alert-custom alert-warning py-3 px-4 mb-3 shadow-sm";
                     teksSaranAI.innerHTML += `<br><small class="text-dark">Sistem kurang yakin. Mohon periksa kembali pilihan kategori di bawah.</small>`;
@@ -141,9 +175,20 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        if (lokasi.length > 255) {
+            alert("Lokasi maksimal 255 karakter.");
+            return;
+        }
+
+        if (deskripsi.length > 5000) {
+            alert("Deskripsi kerusakan maksimal 5000 karakter.");
+            return;
+        }
+
+        // Kirim field 
         const formData = new FormData();
         formData.append("photo", file);
-        formData.append("category", kategori);
+        formData.append("final_category", kategori.toUpperCase());
         if (lastAiCategory) {
             formData.append("ai_category", lastAiCategory);
         }
@@ -162,17 +207,29 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: formData
             });
 
+            if (response.status === 401) {
+                handleUnauthorized();
+                return;
+            }
+
             if (response.ok) {
                 alert("Laporan berhasil dikirim! Terima kasih.");
                 formLaporan.reset();
                 lastAiCategory = null;
+                if (currentObjectUrl) {
+                    URL.revokeObjectURL(currentObjectUrl);
+                    currentObjectUrl = null;
+                }
                 previewContainer.classList.add("d-none");
                 kategoriContainer.classList.add("d-none");
                 detailContainer.classList.add("d-none");
                 alertSaranAI.classList.add("d-none");
             } else {
                 const errorData = await response.json();
-                alert(`Gagal mengirim laporan: ${errorData.detail || errorData.message || 'Kesalahan server'}`);
+                const detailMsg = Array.isArray(errorData.detail)
+                    ? errorData.detail.map(err => err.msg).join(", ")
+                    : (errorData.detail || errorData.message || "Kesalahan server");
+                alert(`Gagal mengirim laporan: ${detailMsg}`);
             }
         } catch (error) {
             console.error("Error API Laporan:", error);
