@@ -1,10 +1,17 @@
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+_BACKEND_DIR = Path(__file__).resolve().parents[2]
+_DEFAULT_ENV = _BACKEND_DIR / ".env"
+
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=_DEFAULT_ENV if _DEFAULT_ENV.exists() else ".env",
+        extra="ignore",
+    )
 
     app_env: str = "development"
     cors_origins: str = "http://localhost:5500"

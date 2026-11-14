@@ -18,6 +18,12 @@ def test_predict_ok():
     assert r.json()["prediction"]["category"] in {"AC", "KURSI", "LAMPU", "PROYEKTOR"}
 
 
+def test_predict_ai_endpoint_ok():
+    r = client.post("/api/ai/predict", files={"photo": ("a.jpg", JPEG, "image/jpeg")})
+    assert r.status_code == 200
+    assert r.json()["prediction"]["category"] in {"AC", "KURSI", "LAMPU", "PROYEKTOR"}
+
+
 def test_predict_rejects_non_image():
     r = client.post("/api/predictions", files={"photo": ("a.jpg", b"bukan gambar", "image/jpeg")})
     assert r.status_code == 415

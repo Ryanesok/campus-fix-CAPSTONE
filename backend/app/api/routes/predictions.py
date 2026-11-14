@@ -4,7 +4,7 @@ from app.ai.classifier import ImageClassifier, get_classifier
 from app.core.config import Settings, get_settings
 from app.schemas.prediction import PredictionResponse
 
-router = APIRouter(prefix="/api/predictions", tags=["predictions"])
+router = APIRouter(tags=["predictions"])
 
 # Periksa isi file (magic bytes), bukan hanya ekstensi atau Content-Type.
 _SIGNATURES = (b"\xff\xd8\xff", b"\x89PNG\r\n\x1a\n")
@@ -16,7 +16,8 @@ def _is_allowed_image(data: bytes) -> bool:
     return data[:4] == b"RIFF" and data[8:12] == b"WEBP"
 
 
-@router.post("", response_model=PredictionResponse)
+@router.post("/api/predictions", response_model=PredictionResponse)
+@router.post("/api/ai/predict", response_model=PredictionResponse)
 async def predict(
     photo: UploadFile = File(...),
     settings: Settings = Depends(get_settings),

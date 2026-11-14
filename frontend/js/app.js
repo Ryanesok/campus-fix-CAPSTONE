@@ -1,11 +1,7 @@
 // Base URL Backend API Python
 const API_BASE_URL = "http://127.0.0.1:8000";
 
-// Variabel Model TF.js
-let aiModel = null;
-const KELAS_FASILITAS = ["AC", "Kursi", "Lampu", "Proyektor"];
-
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
     
     // --- PENGECEKAN AUTENTIKASI ---
     const token = localStorage.getItem("campusfix_token");
@@ -31,14 +27,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    // --- MUAT MODEL TENSORFLOW.JS ---
-    try {
-        aiModel = await tf.loadLayersModel('./assets/model/model.json');
-        console.log("Model AI TF.js berhasil dimuat!");
-    } catch (error) {
-        console.warn("Model AI belum tersedia atau path salah. Prediksi AI otomatis dilewati.", error);
-    }
-
     // --- REFERENSI ELEMEN FORM ---
     const fotoInput = document.getElementById("fotoFasilitas");
     const previewContainer = document.getElementById("previewContainer");
@@ -54,8 +42,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const formLaporan = document.getElementById("formLaporan");
     const btnKirim = document.getElementById("btnKirim");
 
-    // --- LOGIKA UNGGAH FOTO & PREDIKSI AI ---
-    fotoInput.addEventListener("change", function(e) {
+    let lastAiCategory = null;
+
+    // --- LOGIKA UNGGAH FOTO & PEMANGGILAN API PREDIKSI AI DARI BACKEND ---
+    fotoInput.addEventListener("change", async function(e) {
         const file = e.target.files[0];
         if (!file) return;
 
@@ -64,47 +54,51 @@ document.addEventListener("DOMContentLoaded", async () => {
         detailContainer.classList.add("d-none");
         alertSaranAI.classList.add("d-none");
         kategoriFinal.value = "";
+        lastAiCategory = null;
         
         // Tampilkan foto di browser
         const objectUrl = URL.createObjectURL(file);
         previewImage.src = objectUrl;
         previewContainer.classList.remove("d-none");
-        
-        // Prediksi dijalankan SETELAH gambar selesai dimuat di HTML
-        previewImage.onload = async () => {
-            
-            // JIKA MODEL AI GAGAL DIMUAT
-            if (!aiModel) {
-                alertSaranAI.className = "alert alert-custom alert-warning py-3 px-4 mb-3 shadow-sm";
-                teksSaranAI.innerHTML = `<strong>Peringatan Sistem:</strong> Modul AI belum terpasang. Silakan pilih kategori secara manual.`;
-                alertSaranAI.classList.remove("d-none");
+        loadingAI.classList.remove("d-none");
+
+        // Kirim foto ke API Backend untuk inferensi model AI
+        const formData = new FormData();
+        formData.append("photo", file);
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/predictions`, {
+                method: "POST",
+                headers: token ? { "Authorization": `Bearer ${token}` } : {},
+                body: formData
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const prediction = data.prediction || {};
+                const rawCategory = prediction.category || "";
+                const confidence = typeof prediction.confidence === "number" ? prediction.confidence : 0;
+                const persen = Math.round(confidence * 100);
+
+                // Sinkronisasi pemetaan kategori dengan opsi form dropdown
+                const categoryMap = {
+                    "AC": "AC",
+                    "KURSI": "Kursi",
+                    "LAMPU": "Lampu",
+                    "PROYEKTOR": "Proyektor",
+                    "Kursi": "Kursi",
+                    "Lampu": "Lampu",
+                    "Proyektor": "Proyektor"
+                };
+                const matchedCategory = categoryMap[rawCategory] || categoryMap[rawCategory.toUpperCase()] || rawCategory;
+                lastAiCategory = matchedCategory;
+
+                teksSaranAI.innerHTML = `Saran AI: <strong>${matchedCategory}</strong> (Keyakinan: ${persen}%)`;
                 
-                kategoriContainer.classList.remove("d-none");
-                detailContainer.classList.remove("d-none");
-                return;
-            }
-
-            // JIKA MODEL AI ADA, LANJUT PREDICT
-            loadingAI.classList.remove("d-none");
-
-            try {
-                const tensor = tf.browser.fromPixels(previewImage)
-                    .resizeNearestNeighbor([224, 224])
-                    .toFloat()
-                    .expandDims();
-
-                const predictions = await aiModel.predict(tensor).data();
-                
-                const highestIndex = predictions.indexOf(Math.max(...predictions));
-                const category = KELAS_FASILITAS[highestIndex];
-                const confidence = predictions[highestIndex];
-                const persen = (confidence * 100).toFixed(0);
-
-                teksSaranAI.innerHTML = `Saran AI: <strong>${category}</strong> (Keyakinan: ${persen}%)`;
-                
+                // Jika confidence >= 60%, sistem memilih otomatis
                 if (confidence >= 0.6) {
                     alertSaranAI.className = "alert alert-custom alert-success py-3 px-4 mb-3 shadow-sm";
-                    kategoriFinal.value = category; 
+                    kategoriFinal.value = matchedCategory; 
                 } else {
                     alertSaranAI.className = "alert alert-custom alert-warning py-3 px-4 mb-3 shadow-sm";
                     teksSaranAI.innerHTML += `<br><small class="text-dark">Sistem kurang yakin. Mohon periksa kembali pilihan kategori di bawah.</small>`;
@@ -112,19 +106,20 @@ document.addEventListener("DOMContentLoaded", async () => {
                 }
 
                 alertSaranAI.classList.remove("d-none");
-                tensor.dispose();
-
-            } catch (error) {
-                console.error("TF.js Error:", error);
-                alertSaranAI.className = "alert alert-custom alert-danger py-3 px-4 mb-3 shadow-sm";
-                teksSaranAI.innerHTML = `Gagal memproses gambar. Silakan pilih kategori secara manual.`;
-                alertSaranAI.classList.remove("d-none");
-            } finally {
-                loadingAI.classList.add("d-none");
-                kategoriContainer.classList.remove("d-none");
-                detailContainer.classList.remove("d-none");
+            } else {
+                throw new Error(`Server merespons status ${response.status}`);
             }
-        };
+
+        } catch (error) {
+            console.warn("Gagal memanggil API Prediksi AI:", error);
+            alertSaranAI.className = "alert alert-custom alert-warning py-3 px-4 mb-3 shadow-sm";
+            teksSaranAI.innerHTML = `Layanan AI sedang tidak tersedia. Silakan pilih kategori secara manual.`;
+            alertSaranAI.classList.remove("d-none");
+        } finally {
+            loadingAI.classList.add("d-none");
+            kategoriContainer.classList.remove("d-none");
+            detailContainer.classList.remove("d-none");
+        }
     });
 
     // --- LOGIKA KIRIM LAPORAN KE BACKEND ---
@@ -144,6 +139,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         const formData = new FormData();
         formData.append("photo", file);
         formData.append("category", kategori);
+        if (lastAiCategory) {
+            formData.append("ai_category", lastAiCategory);
+        }
         formData.append("location", lokasi);
         formData.append("description", deskripsi);
 
@@ -162,13 +160,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (response.ok) {
                 alert("Laporan berhasil dikirim! Terima kasih.");
                 formLaporan.reset();
+                lastAiCategory = null;
                 previewContainer.classList.add("d-none");
                 kategoriContainer.classList.add("d-none");
                 detailContainer.classList.add("d-none");
                 alertSaranAI.classList.add("d-none");
             } else {
                 const errorData = await response.json();
-                alert(`Gagal mengirim laporan: ${errorData.message || 'Kesalahan server'}`);
+                alert(`Gagal mengirim laporan: ${errorData.detail || errorData.message || 'Kesalahan server'}`);
             }
         } catch (error) {
             console.error("Error API Laporan:", error);
