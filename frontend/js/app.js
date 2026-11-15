@@ -53,6 +53,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const btnKirim = document.getElementById("btnKirim");
 
     // --- LOGIKA UNGGAH FOTO & PREDIKSI AI ---
+    let lastAiCategory = null; // Variabel untuk menyimpan kategori terakhir dari AI
     fotoInput.addEventListener("change", function (e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -71,6 +72,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         // Reset UI saat foto baru dipilih
+        lastAiCategory = null;
         kategoriContainer.classList.add("d-none");
         detailContainer.classList.add("d-none");
         alertSaranAI.classList.add("d-none");
@@ -105,10 +107,15 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const category = result.prediction.category;
                 const confidence = result.prediction.confidence;
                 const persen = (confidence * 100).toFixed(0);
+
+                lastAiCategory = category; // Simpan kategori terakhir dari AI
                 teksSaranAI.innerHTML = `Saran AI: <strong>${category}</strong> (Keyakinan: ${persen}%)`;
                 if (confidence >= 0.6) {
                     alertSaranAI.className = "alert alert-custom alert-success py-3 px-4 mb-3 shadow-sm";
-                    kategoriFinal.value = category;
+                    const matchedOption = Array.from(kategoriFinal.options).find(
+                        opt => opt.value.toLowerCase() === category.toLowerCase()
+                    );
+                    kategoriFinal.value = matchedOption ? matchedOption.value : "";
                 } else {
                     alertSaranAI.className = "alert alert-custom alert-warning py-3 px-4 mb-3 shadow-sm";
                     teksSaranAI.innerHTML += `<br><small class="text-dark">Sistem kurang yakin. Mohon periksa kembali pilihan kategori di bawah.</small>`;
