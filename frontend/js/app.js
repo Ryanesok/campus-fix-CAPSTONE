@@ -1,9 +1,45 @@
+const LOGIN_PAGE_URL = "pages/login.html";
+
+function cekSesiKedaluwarsa() {
+    const token = localStorage.getItem("campusfix_token");
+    if (!token) return true;
+
+    let expMs = Number(localStorage.getItem("campusfix_token_exp") || 0);
+    try {
+        const parts = token.split(".");
+        if (parts.length === 3) {
+            const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+            if (typeof payload.exp === "number") expMs = payload.exp * 1000;
+        }
+    } catch {}
+
+    return expMs > 0 && Date.now() >= (expMs - 10000);
+}
+
+function paksaLogoutSesiHabis() {
+    localStorage.removeItem("campusfix_token");
+    localStorage.removeItem("campusfix_role");
+    localStorage.removeItem("campusfix_token_exp");
+    window.location.href = `${LOGIN_PAGE_URL}?expired=1`;
+}
+
+// Jalankan pengecekan langsung saat halaman dibuka, setiap 15 detik, dan saat tab kembali aktif
+if (cekSesiKedaluwarsa()) {
+    paksaLogoutSesiHabis();
+}
+setInterval(() => {
+    if (cekSesiKedaluwarsa()) paksaLogoutSesiHabis();
+}, 15000);
+document.addEventListener("visibilitychange", () => {
+    if (!document.hidden && cekSesiKedaluwarsa()) paksaLogoutSesiHabis();
+});
+
 // Base URL Backend API Python
 const API_BASE_URL = "http://127.0.0.1:8000";
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-document.addEventListener("DOMContentLoaded", async () => {
+document.addEventListener("DOMContentLoaded", () => {
 
     // --- PENGECEKAN AUTENTIKASI ---
     const token = localStorage.getItem("campusfix_token");
@@ -52,9 +88,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     const formLaporan = document.getElementById("formLaporan");
     const btnKirim = document.getElementById("btnKirim");
 
+    // State aplikasi
+    let lastAiCategory = null;
+    let currentObjectUrl = null;
+
     // --- LOGIKA UNGGAH FOTO & PREDIKSI AI ---
-    let lastAiCategory = null; // Variabel untuk menyimpan kategori terakhir dari AI
-    fotoInput.addEventListener("change", function (e) {
+    fotoInput.addEventListener("change", async function (e) {
         const file = e.target.files[0];
         if (!file) return;
 
@@ -71,68 +110,79 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        // Reset UI saat foto baru dipilih
-        lastAiCategory = null;
+        // Reset UI & state saat foto baru dipilih
         kategoriContainer.classList.add("d-none");
         detailContainer.classList.add("d-none");
         alertSaranAI.classList.add("d-none");
         kategoriFinal.value = "";
+        lastAiCategory = null;
 
-        // Tampilkan foto di browser
+        // Tampilkan preview foto di browser
         if (currentObjectUrl) {
             URL.revokeObjectURL(currentObjectUrl);
         }
         currentObjectUrl = URL.createObjectURL(file);
         previewImage.src = currentObjectUrl;
         previewContainer.classList.remove("d-none");
+        loadingAI.classList.remove("d-none");
 
-        // Prediksi dijalankan SETELAH gambar selesai dimuat di HTML
-        previewImage.onload = async () => {
-            // JALANKAN PREDIKSI KE BACKEND SERVER-SIDE AI
-            loadingAI.classList.remove("d-none");
-            try {
-                const formData = new FormData();
-                formData.append("photo", file);  // `file` sudah tersedia dari e.target.files[0]
-                const response = await fetch(`${API_BASE_URL}/api/predictions`, {
-                    method: "POST",
-                    body: formData
-                    // Tidak perlu Authorization header — endpoint /api/predictions tidak memerlukan auth
-                    // Tidak perlu Content-Type — browser set multipart boundary otomatis
-                });
-                if (!response.ok) {
-                    throw new Error(`Server error: ${response.status}`);
-                }
-                const result = await response.json();
-                // result.prediction = { category: "LAMPU", confidence: 0.92 }
-                const category = result.prediction.category;
-                const confidence = result.prediction.confidence;
-                const persen = (confidence * 100).toFixed(0);
+        // Kirim foto ke backend
+        try {
+            const formData = new FormData();
+            formData.append("photo", file);
 
-                lastAiCategory = category; // Simpan kategori terakhir dari AI
-                teksSaranAI.innerHTML = `Saran AI: <strong>${category}</strong> (Keyakinan: ${persen}%)`;
-                if (confidence >= 0.6) {
-                    alertSaranAI.className = "alert alert-custom alert-success py-3 px-4 mb-3 shadow-sm";
-                    const matchedOption = Array.from(kategoriFinal.options).find(
-                        opt => opt.value.toLowerCase() === category.toLowerCase()
-                    );
-                    kategoriFinal.value = matchedOption ? matchedOption.value : "";
-                } else {
-                    alertSaranAI.className = "alert alert-custom alert-warning py-3 px-4 mb-3 shadow-sm";
-                    teksSaranAI.innerHTML += `<br><small class="text-dark">Sistem kurang yakin. Mohon periksa kembali pilihan kategori di bawah.</small>`;
-                    kategoriFinal.value = "";
-                }
-                alertSaranAI.classList.remove("d-none");
-            } catch (error) {
-                console.error("Kesalahan Prediksi AI:", error);
-                alertSaranAI.className = "alert alert-custom alert-danger py-3 px-4 mb-3 shadow-sm";
-                teksSaranAI.innerHTML = `Gagal memproses gambar dengan AI. Silakan pilih kategori secara manual.`;
-                alertSaranAI.classList.remove("d-none");
-            } finally {
-                loadingAI.classList.add("d-none");
-                kategoriContainer.classList.remove("d-none");
-                detailContainer.classList.remove("d-none");
+            const response = await fetch(`${API_BASE_URL}/api/predictions`, {
+                method: "POST",
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
             }
-        };
+
+            const result = await response.json();
+            const prediction = result.prediction || {};
+            const rawCategory = (prediction.category || "").trim();
+            const confidence = typeof prediction.confidence === "number" ? prediction.confidence : 0;
+            const persen = (confidence * 100).toFixed(0);
+
+            const displayLabelMap = {
+                "AC": "AC",
+                "KURSI": "Kursi",
+                "LAMPU": "Lampu",
+                "PROYEKTOR": "Proyektor"
+            };
+
+            const upperCategory = rawCategory.toUpperCase();
+            const displayLabel = displayLabelMap[upperCategory] || "";
+
+            if (displayLabel) {
+                lastAiCategory = upperCategory;
+            }
+
+            teksSaranAI.innerHTML = `Saran AI: <strong>${displayLabel || rawCategory}</strong> (Keyakinan: ${persen}%)`;
+
+            if (confidence >= 0.6 && displayLabel) {
+                alertSaranAI.className = "alert alert-custom alert-success py-3 px-4 mb-3 shadow-sm";
+                const hasUpperOption = Boolean(kategoriFinal.querySelector(`option[value="${upperCategory}"]`));
+                kategoriFinal.value = hasUpperOption ? upperCategory : displayLabel;
+            } else {
+                alertSaranAI.className = "alert alert-custom alert-warning py-3 px-4 mb-3 shadow-sm";
+                teksSaranAI.innerHTML += `<br><small class="text-dark">Sistem kurang yakin. Mohon periksa kembali pilihan kategori di bawah.</small>`;
+                kategoriFinal.value = "";
+            }
+
+            alertSaranAI.classList.remove("d-none");
+        } catch (error) {
+            console.error("Kesalahan Prediksi AI:", error);
+            alertSaranAI.className = "alert alert-custom alert-danger py-3 px-4 mb-3 shadow-sm";
+            teksSaranAI.innerHTML = `Gagal memproses gambar dengan AI. Silakan pilih kategori secara manual.`;
+            alertSaranAI.classList.remove("d-none");
+        } finally {
+            loadingAI.classList.add("d-none");
+            kategoriContainer.classList.remove("d-none");
+            detailContainer.classList.remove("d-none");
+        }
     });
 
     // --- LOGIKA KIRIM LAPORAN KE BACKEND ---
@@ -159,10 +209,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        // Kirim field 
         const formData = new FormData();
         formData.append("photo", file);
-        formData.append("final_category", kategori.toUpperCase());
+        formData.append("category", kategori.toUpperCase());
         if (lastAiCategory) {
             formData.append("ai_category", lastAiCategory);
         }
@@ -201,9 +250,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             } else {
                 const errorData = await response.json();
                 const detailMsg = Array.isArray(errorData.detail)
-                    ? errorData.detail.map(err => err.msg).join(", ")
+                    ? errorData.detail.map(err => `${err.loc ? err.loc.join(".") + ": " : ""}${err.msg}`).join("\n")
                     : (errorData.detail || errorData.message || "Kesalahan server");
-                alert(`Gagal mengirim laporan: ${detailMsg}`);
+                alert(`Gagal mengirim laporan:\n${detailMsg}`);
             }
         } catch (error) {
             console.error("Error API Laporan:", error);

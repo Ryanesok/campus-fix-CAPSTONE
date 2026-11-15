@@ -75,7 +75,7 @@
                 <label class="me-2 fw-medium text-muted small">Filter Status:</label>
                 <select class="form-select form-select-sm border-0 shadow-sm rounded-pill px-3" id="filterStatus" style="width: auto;">
                     <option value="semua">Semua Laporan</option>
-                    <option value="baru">Baru</option>
+                    <option value="pending">Baru</option>
                     <option value="accepted">Diproses</option>
                     <option value="completed">Selesai</option>
                     <option value="rejected">Ditolak</option>
@@ -89,7 +89,7 @@
                 <table class="table table-hover table-custom mb-0" id="tabelLaporan">
                     <thead>
                         <tr>
-                            <th class="px-4 py-3">Tanggal</th>
+                            <th class="px-4 py-3">Waktu Dilaporkan</th>
                             <th class="py-3">Kategori</th>
                             <th class="py-3">Lokasi</th>
                             <th class="py-3">Status</th>
@@ -121,15 +121,27 @@
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0 shadow" style="border-radius: 1rem;">
                 <div class="modal-header border-bottom-0 pb-0">
-                    <h5 class="modal-title fw-bold">Detail Laporan</h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <h5 class="modal-title fw-bold mb-0">Detail Laporan</h5>
+                        <span id="modalStatusBadge" class="badge status-badge bg-secondary">-</span>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row">
                         <!-- Kolom Foto & Info -->
-                        <div class="col-md-6 mb-3 mb-md-0">
+                        <div class="col-md-6 mb-3 mb-md-0" id="kolomDetailLaporan">
                             <img src="" id="modalFotoLaporan" class="mb-3 border" alt="Foto Rusak">
                             <div class="bg-light p-3 rounded-3">
+                                <p class="mb-1 small text-muted">Waktu Dilaporkan</p>
+                                <p class="fw-semibold text-dark small mb-2" id="modalWaktuLapor">-</p>
+
+                                <!-- Waktu Tindakan Admin -->
+                                <div id="modalWadahWaktuStatus" class="d-none">
+                                    <p class="mb-1 small text-muted" id="modalLabelWaktuStatus">Waktu Diproses</p>
+                                    <p class="fw-semibold text-dark small mb-2" id="modalWaktuStatus">-</p>
+                                </div>
+
                                 <p class="mb-1 small text-muted">Kategori</p>
                                 <h6 class="fw-bold text-dark mb-2" id="modalKategori">-</h6>
                                 
@@ -138,11 +150,19 @@
                                 
                                 <p class="mb-1 small text-muted">Deskripsi Kerusakan</p>
                                 <p class="mb-0 small text-dark" id="modalDeskripsi">-</p>
+
+                                <!-- Alasan Penolakan -->
+                                <div id="modalWadahAlasanTolak" class="mt-3 pt-2 border-top d-none">
+                                    <p class="mb-1 small text-danger fw-semibold">
+                                        <i class="bi bi-exclamation-circle-fill me-1"></i> Alasan Penolakan
+                                    </p>
+                                    <p class="mb-0 small text-dark" id="modalAlasanTolak">-</p>
+                                </div>
                             </div>
                         </div>
                         
-                        <!-- Kolom Aksi Admin -->
-                        <div class="col-md-6">
+                        <!-- Kolom Aksi Admin (otomatis tersembunyi jika Selesai / Ditolak) -->
+                        <div class="col-md-6" id="kolomAksiAdmin">
                             <form id="formProsesLaporan">
                                 <input type="hidden" id="modalReportId">
                                 
@@ -150,11 +170,11 @@
                                     <label class="form-label fw-bold text-primary">Tindakan Admin</label>
                                     <select class="form-select bg-light" id="selectTindakan" required>
                                         <option value="" disabled selected>-- Pilih Pembaruan Status --</option>
-                                        <!-- Opsi accepted, completed, rejected -->
                                         <option value="accepted">Terima & Proses Laporan</option>
                                         <option value="completed">Tandai Selesai Diperbaiki</option>
                                         <option value="rejected">Tolak Laporan</option>
                                     </select>
+                                    <div class="form-text text-muted small mt-1" id="infoAlurStatus"></div>
                                 </div>
 
                                 <!-- Field Alasan Penolakan -->
