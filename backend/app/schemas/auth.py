@@ -1,3 +1,4 @@
+# backend/app/schemas/auth.py
 from uuid import UUID
 
 from pydantic import BaseModel, Field

@@ -1,3 +1,4 @@
+// frontend/js/login.js
 const API_BASE_URL = "http://127.0.0.1:8000";
 const DEFAULT_SESSION_MS = 60 * 60 * 1000; // Fallback 1 jam jika token tidak memiliki claim exp
 

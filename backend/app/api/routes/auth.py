@@ -1,3 +1,4 @@
+# backend/app/api/routes/auth.py
 import hashlib
 from uuid import UUID
 

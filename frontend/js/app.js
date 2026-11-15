@@ -1,3 +1,4 @@
+// frontend/js/app.js
 const LOGIN_PAGE_URL = "pages/login.html";
 
 function cekSesiKedaluwarsa() {

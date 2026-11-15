@@ -1,3 +1,4 @@
+# backend/app/models/profile.py
 import uuid
 from datetime import datetime
 from enum import Enum

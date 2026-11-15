@@ -1,3 +1,4 @@
+# backend/tests/test_api.py
 import io
 from PIL import Image
 from fastapi.testclient import TestClient
