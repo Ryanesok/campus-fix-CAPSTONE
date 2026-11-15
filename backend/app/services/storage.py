@@ -30,3 +30,23 @@ def upload_report_photo(path: str, data: bytes, content_type: str) -> None:
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Foto laporan gagal disimpan.",
         ) from exc
+
+
+def get_report_photo_url(path: str | None) -> str | None:
+    if not path:
+        return None
+    settings = get_settings()
+    if not settings.supabase_url or not settings.supabase_storage_bucket:
+        return None
+    try:
+        bucket = get_storage_client().storage.from_(settings.supabase_storage_bucket)
+        signed = bucket.create_signed_url(path, 3600)
+        if isinstance(signed, dict):
+            url = signed.get("signedURL") or signed.get("signedUrl")
+            if url:
+                return url
+        public_url = bucket.get_public_url(path)
+        return public_url.rstrip("?") if isinstance(public_url, str) else None
+    except Exception:
+        base = settings.supabase_url.rstrip("/")
+        return f"{base}/storage/v1/object/public/{settings.supabase_storage_bucket}/{path}"

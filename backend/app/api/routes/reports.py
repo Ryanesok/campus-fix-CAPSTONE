@@ -9,7 +9,7 @@ from app.core.config import get_settings
 from app.db.session import get_db
 from app.models import FacilityCategory, Report, ReportStatus, UserRole
 from app.schemas.report import ReportResponse, ReportStatusUpdate, validate_report_text
-from app.services.storage import upload_report_photo
+from app.services.storage import get_report_photo_url, upload_report_photo
 
 router = APIRouter(prefix="/api", tags=["reports"])
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
@@ -47,6 +47,15 @@ def _parse_category(value: str, field_name: str) -> FacilityCategory:
     return category
 
 
+def _serialize_report(report: Report) -> ReportResponse:
+    response = ReportResponse.model_validate(report)
+    if not response.photo_url and report.photo_path:
+        response = response.model_copy(
+            update={"photo_url": get_report_photo_url(report.photo_path)}
+        )
+    return response
+
+
 @router.post("/reports", response_model=ReportResponse, status_code=status.HTTP_201_CREATED)
 async def create_report(
     photo: UploadFile = File(...),
@@ -56,7 +65,7 @@ async def create_report(
     ai_category: str | None = Form(None),
     current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> Report:
+) -> ReportResponse:
     if photo.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(status_code=415, detail="Format foto harus JPEG, PNG, atau WebP.")
 
@@ -93,29 +102,31 @@ async def create_report(
     db.add(report)
     db.commit()
     db.refresh(report)
-    return report
+    return _serialize_report(report)
 
 
 @router.get("/reports/me", response_model=list[ReportResponse])
 def get_my_reports(
     current_user: CurrentUser = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> list[Report]:
-    return list(
+) -> list[ReportResponse]:
+    reports = list(
         db.scalars(
             select(Report)
             .where(Report.reporter_id == current_user.id)
             .order_by(Report.created_at.desc())
         )
     )
+    return [_serialize_report(report) for report in reports]
 
 
 @router.get("/admin/reports", response_model=list[ReportResponse])
 def get_admin_reports(
     _admin: CurrentUser = Depends(require_role(UserRole.ADMIN)),
     db: Session = Depends(get_db),
-) -> list[Report]:
-    return list(db.scalars(select(Report).order_by(Report.created_at.desc())))
+) -> list[ReportResponse]:
+    reports = list(db.scalars(select(Report).order_by(Report.created_at.desc())))
+    return [_serialize_report(report) for report in reports]
 
 
 @router.patch("/admin/reports/{report_id}/status", response_model=ReportResponse)
@@ -124,7 +135,7 @@ def update_report_status(
     update: ReportStatusUpdate,
     _admin: CurrentUser = Depends(require_role(UserRole.ADMIN)),
     db: Session = Depends(get_db),
-) -> Report:
+) -> ReportResponse:
     report = _get_report_or_404(report_id, db)
     allowed_transitions = {
         ReportStatus.PENDING: {ReportStatus.ACCEPTED, ReportStatus.REJECTED},
@@ -141,4 +152,4 @@ def update_report_status(
     report.admin_note = update.admin_note
     db.commit()
     db.refresh(report)
-    return report
+    return _serialize_report(report)
