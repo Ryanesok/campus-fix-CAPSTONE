@@ -39,6 +39,7 @@ class RawInferenceResult:
     ranked_predictions: List[RankedClassScore]
     inference_time_ms: float
 
+
 class ImageClassifier(Protocol):
     def predict_raw(self, image_bytes: bytes) -> RawInferenceResult: ...
 

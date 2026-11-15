@@ -16,9 +16,10 @@ if not exist ".venv\Scripts\python.exe" (
 echo [OK] Python venv ditemukan.
 echo.
 
-:: 2. Uji Modul AI Terpisah (ai/predictor.py)
-echo [2/3] Menguji Modul AI (ai/predictor.py)...
-.venv\Scripts\python.exe -c "from ai.predictor import predict_facility; res = predict_facility(b'test-img-bytes'); assert 'category' in res and 'confidence' in res, 'Format output AI tidak valid'; print('   -> AI Output:', res)"
+:: 2. Uji Modul AI Backend (backend/app/ai)
+echo [2/3] Menguji Modul AI (backend/app/ai)...
+set "PYTHONPATH=%~dp0backend"
+.venv\Scripts\python.exe -c "import io; from PIL import Image; from app.ai.classifier import get_classifier; from app.ai.policy import apply_prediction_policy; buf = io.BytesIO(); Image.new('RGB', (32, 32), (128, 128, 128)).save(buf, format='JPEG'); pred, ev = apply_prediction_policy(get_classifier().predict_raw(buf.getvalue())); assert ev.threshold_used == 0.70 and pred.category.value in {'AC','KURSI','LAMPU','PROYEKTOR'}; print('   -> AI Output:', pred.model_dump(), '| threshold:', ev.threshold_used)"
 if %ERRORLEVEL% neq 0 (
     echo [ERROR] Pengujian modul AI gagal!
     exit /b %ERRORLEVEL%

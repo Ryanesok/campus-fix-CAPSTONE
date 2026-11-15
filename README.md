@@ -11,14 +11,13 @@ Login → unggah/ambil foto → kategori otomatis tampil → isi lokasi, deskrip
 | Frontend | HTML, CSS, Bootstrap, JavaScript |
 | Backend | Python 3.12 + FastAPI |
 | Database & Storage | Supabase (PostgreSQL + Storage) |
-| AI | scikit-learn |
+| AI | TensorFlow MobileNetV2 (`SavedModel`) |
 | ORM / Migrasi | SQLAlchemy / Alembic |
 | Pengujian | pytest, Postman |
 
 ## Struktur
 ```
-ai/        Modul & model AI terpisah (model/, ai_module/, predictor.py)
-backend/   API FastAPI (app/, tests/, alembic/)
+backend/   API FastAPI (app/, tests/, alembic/, dan modul AI app/ai/)
 frontend/  Antarmuka web
 docs/      API, database, integrasi AI, panduan pengembangan
 ```

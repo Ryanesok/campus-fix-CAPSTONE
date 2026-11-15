@@ -276,35 +276,34 @@ Transisi lain menghasilkan `409 Conflict`.
 
 ## Kontrak untuk tim AI
 
-Backend mengharapkan implementasi yang memenuhi:
+Backend mengharapkan implementasi yang memenuhi protokol di `backend/app/ai/classifier.py` + `policy.py`:
 
 ```python
 class ImageClassifier(Protocol):
-    def predict(self, image_bytes: bytes) -> Prediction: ...
+    def predict_raw(self, image_bytes: bytes) -> RawInferenceResult: ...
 ```
 
 Implementasi model harus:
 
 - Menerima bytes gambar asli.
-- Melakukan preprocessing di dalam classifier.
-- Mengembalikan satu dari empat kategori model.
-- Mengembalikan confidence antara `0.0` dan `1.0`, atau `None` jika model
-  tidak menyediakan confidence.
+- Melakukan preprocessing EXIF transpose dan letterbox `224x224` (`RGB(128, 128, 128)`, nilai piksel `float32 0..255` tanpa normalisasi ganda `/255`) sesuai kontrak training MobileNetV2.
+- Mengembalikan satu dari empat kategori model (`AC`, `KURSI`, `LAMPU`, `PROYEKTOR`).
+- Mengembalikan confidence antara `0.0` dan `1.0`, disertai ambang batas default `0.70` di `backend/app/ai/policy.py` & frontend `frontend/js/app.js`.
 - Tidak melatih model atau memuat ulang model pada setiap request.
 
 Tim AI perlu menyerahkan:
 
-- artefak model `.pkl` atau `.joblib`;
+- artefak `SavedModel` TensorFlow beserta kontrak JSON (`class_names.json`, `model_contract.json`, `preprocessing_spec.json`);
 - kode preprocessing yang sama dengan saat training;
-- versi Python dan library;
-- ukuran/resolusi input;
-- mapping label;
+- versi Python dan library (`tensorflow-cpu`, `Pillow`, `numpy`);
+- ukuran/resolusi input (`224x224`);
+- mapping label dan nilai threshold terkalibrasi (`0.70`);
 - contoh prediksi;
-- metrik evaluasi.
+- metrik evaluasi (Confusion Matrix & Error Analysis).
 
-Artefak model dan dataset tidak boleh di-commit tanpa kesepakatan tim.
-Implementasi model menggantikan `MockClassifier` di
-`backend/app/ai/classifier.py`, tetapi response API harus tetap sama.
+Dataset tidak boleh di-commit ke Git.
+Implementasi model menggunakan `TfGraphModelClassifier` di
+`backend/app/ai/classifier.py`, dan response API tetap kompatibel (`{ "success": true, "prediction": { "category", "confidence" } }`).
 
 ## CORS development
 
