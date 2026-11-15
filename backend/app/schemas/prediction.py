@@ -1,3 +1,4 @@
+# backend/app/schemas/prediction.py
 from enum import Enum
 
 from pydantic import BaseModel

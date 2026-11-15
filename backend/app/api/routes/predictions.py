@@ -1,3 +1,4 @@
+# backend/app/api/routes/predictions.py
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
 from app.ai.classifier import ImageClassifier, get_classifier
