@@ -1,5 +1,7 @@
 // Base URL Backend API Python
 const API_BASE_URL = "http://127.0.0.1:8000";
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 document.addEventListener("DOMContentLoaded", async () => {
 
@@ -15,6 +17,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (role === "admin") {
         window.location.href = "pages/admin.html";
         return;
+    }
+
+    // Helper untuk menangani sesi habis (401)
+    function handleUnauthorized() {
+        localStorage.removeItem("campusfix_token");
+        localStorage.removeItem("campusfix_role");
+        alert("Sesi login Anda telah berakhir. Silakan login kembali.");
+        window.location.href = "pages/login.html";
     }
 
     // --- LOGIKA LOGOUT ---
@@ -47,6 +57,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         const file = e.target.files[0];
         if (!file) return;
 
+        // Validasi format & ukuran file sebelum diproses
+        if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+            alert("Format foto tidak didukung. Gunakan file JPEG, PNG, atau WebP.");
+            fotoInput.value = "";
+            return;
+        }
+
+        if (file.size > MAX_UPLOAD_BYTES) {
+            alert("Ukuran foto melebihi batas maksimum 5 MB.");
+            fotoInput.value = "";
+            return;
+        }
+
         // Reset UI saat foto baru dipilih
         kategoriContainer.classList.add("d-none");
         detailContainer.classList.add("d-none");
@@ -54,8 +77,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         kategoriFinal.value = "";
 
         // Tampilkan foto di browser
-        const objectUrl = URL.createObjectURL(file);
-        previewImage.src = objectUrl;
+        if (currentObjectUrl) {
+            URL.revokeObjectURL(currentObjectUrl);
+        }
+        currentObjectUrl = URL.createObjectURL(file);
+        previewImage.src = currentObjectUrl;
         previewContainer.classList.remove("d-none");
 
         // Prediksi dijalankan SETELAH gambar selesai dimuat di HTML
@@ -116,9 +142,20 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
+        if (lokasi.length > 255) {
+            alert("Lokasi maksimal 255 karakter.");
+            return;
+        }
+
+        if (deskripsi.length > 5000) {
+            alert("Deskripsi kerusakan maksimal 5000 karakter.");
+            return;
+        }
+
+        // Kirim field 
         const formData = new FormData();
         formData.append("photo", file);
-        formData.append("category", kategori);
+        formData.append("final_category", kategori.toUpperCase());
         if (lastAiCategory) {
             formData.append("ai_category", lastAiCategory);
         }
@@ -137,17 +174,29 @@ document.addEventListener("DOMContentLoaded", async () => {
                 body: formData
             });
 
+            if (response.status === 401) {
+                handleUnauthorized();
+                return;
+            }
+
             if (response.ok) {
                 alert("Laporan berhasil dikirim! Terima kasih.");
                 formLaporan.reset();
                 lastAiCategory = null;
+                if (currentObjectUrl) {
+                    URL.revokeObjectURL(currentObjectUrl);
+                    currentObjectUrl = null;
+                }
                 previewContainer.classList.add("d-none");
                 kategoriContainer.classList.add("d-none");
                 detailContainer.classList.add("d-none");
                 alertSaranAI.classList.add("d-none");
             } else {
                 const errorData = await response.json();
-                alert(`Gagal mengirim laporan: ${errorData.detail || errorData.message || 'Kesalahan server'}`);
+                const detailMsg = Array.isArray(errorData.detail)
+                    ? errorData.detail.map(err => err.msg).join(", ")
+                    : (errorData.detail || errorData.message || "Kesalahan server");
+                alert(`Gagal mengirim laporan: ${detailMsg}`);
             }
         } catch (error) {
             console.error("Error API Laporan:", error);
