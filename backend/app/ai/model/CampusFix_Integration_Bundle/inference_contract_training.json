@@ -1,0 +1,33 @@
+{
+  "task": "facility_type_classification_not_damage_detection",
+  "model_format": "Keras 3 .keras; browser integration/TF.js conversion is a separate stage",
+  "model_file": "model_final.keras",
+  "class_names": [
+    "AC",
+    "Kursi",
+    "Lampu",
+    "Proyektor"
+  ],
+  "label_to_index": {
+    "AC": 0,
+    "Kursi": 1,
+    "Lampu": 2,
+    "Proyektor": 3
+  },
+  "input_shape": [
+    null,
+    224,
+    224,
+    3
+  ],
+  "input_dtype": "float32",
+  "input_values": "RGB pixel intensity 0..255 (do not normalize outside the model)",
+  "original_image_processing": "EXIF transpose, RGB, centered letterbox to 224x224, padding RGB(128,128,128)",
+  "normalization_inside_model": "Rescaling(1/127.5, offset=-1); identical to mobilenet_v2.preprocess_input",
+  "output": "4 softmax scores in class_names order; argmax gives predicted class",
+  "important_limitations": [
+    "No damage detection (only facility category).",
+    "Unknown/non-target objects may still receive a high softmax score.",
+    "No facility-aware split; validation may be optimistic for unseen units."
+  ]
+}

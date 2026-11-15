@@ -1,0 +1,7 @@
+{
+  "status": "passed",
+  "sample_count": 4,
+  "max_abs_diff": 1.1920928955078125e-07,
+  "input_signature_key": "image_rgb_0_255",
+  "serving_signature": "serving_default"
+}

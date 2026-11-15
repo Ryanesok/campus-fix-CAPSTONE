@@ -1,9 +1,16 @@
+import io
+from PIL import Image
 from fastapi.testclient import TestClient
 
 from app.main import app
 
 client = TestClient(app)
-JPEG = b"\xff\xd8\xff\xe0" + b"\x00" * 64
+
+# Generate valid tiny JPEG bytes for testing
+img = Image.new("RGB", (32, 32), color="red")
+buf = io.BytesIO()
+img.save(buf, format="JPEG")
+JPEG = buf.getvalue()
 
 
 def test_health():
@@ -25,3 +32,4 @@ def test_predict_rejects_non_image():
 
 def test_predict_requires_file():
     assert client.post("/api/predictions").status_code == 422
+

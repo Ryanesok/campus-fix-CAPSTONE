@@ -18,8 +18,6 @@ htmlcov/
 .DS_Store
 Thumbs.db
 # AI artifacts and datasets
-backend/app/ai/models/
-backend/app/ai/datasets/
 *.pkl
 *.joblib
 # Uploads and logs
