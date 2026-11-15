@@ -38,11 +38,6 @@ class RawInferenceResult:
     ranked_predictions: List[RankedClassScore]
     inference_time_ms: float
 
-try:
-    from ai.predictor import get_facility_predictor
-except ImportError:
-    get_facility_predictor = None
-
 
 class ImageClassifier(Protocol):
     def predict_raw(self, image_bytes: bytes) -> RawInferenceResult: ...

@@ -162,7 +162,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             teksSaranAI.innerHTML = `Saran AI: <strong>${displayLabel || rawCategory}</strong> (Keyakinan: ${persen}%)`;
 
-            if (confidence >= 0.6 && displayLabel) {
+            if (confidence >= 0.7 && displayLabel) {
                 alertSaranAI.className = "alert alert-custom alert-success py-3 px-4 mb-3 shadow-sm";
                 const hasUpperOption = Boolean(kategoriFinal.querySelector(`option[value="${upperCategory}"]`));
                 kategoriFinal.value = hasUpperOption ? upperCategory : displayLabel;
