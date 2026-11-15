@@ -3,15 +3,15 @@ const API_BASE_URL = "http://127.0.0.1:8000";
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
-document.addEventListener("DOMContentLoaded", () => {
-    
+document.addEventListener("DOMContentLoaded", async () => {
+
     // --- PENGECEKAN AUTENTIKASI ---
     const token = localStorage.getItem("campusfix_token");
     const role = localStorage.getItem("campusfix_role");
 
     if (!token) {
         window.location.href = "pages/login.html";
-        return; 
+        return;
     }
 
     if (role === "admin") {
@@ -42,21 +42,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const previewContainer = document.getElementById("previewContainer");
     const previewImage = document.getElementById("previewImage");
     const loadingAI = document.getElementById("loadingAI");
-    
+
     const kategoriContainer = document.getElementById("kategoriContainer");
     const alertSaranAI = document.getElementById("alertSaranAI");
     const teksSaranAI = document.getElementById("teksSaranAI");
     const kategoriFinal = document.getElementById("kategoriFinal");
-    
+
     const detailContainer = document.getElementById("detailContainer");
     const formLaporan = document.getElementById("formLaporan");
     const btnKirim = document.getElementById("btnKirim");
 
-    let lastAiCategory = null;
-    let currentObjectUrl = null;
-
-    // --- LOGIKA UNGGAH FOTO & PEMANGGILAN API PREDIKSI AI DARI BACKEND ---
-    fotoInput.addEventListener("change", async function(e) {
+    // --- LOGIKA UNGGAH FOTO & PREDIKSI AI ---
+    fotoInput.addEventListener("change", function (e) {
         const file = e.target.files[0];
         if (!file) return;
 
@@ -78,8 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
         detailContainer.classList.add("d-none");
         alertSaranAI.classList.add("d-none");
         kategoriFinal.value = "";
-        lastAiCategory = null;
-        
+
         // Tampilkan foto di browser
         if (currentObjectUrl) {
             URL.revokeObjectURL(currentObjectUrl);
@@ -87,84 +83,55 @@ document.addEventListener("DOMContentLoaded", () => {
         currentObjectUrl = URL.createObjectURL(file);
         previewImage.src = currentObjectUrl;
         previewContainer.classList.remove("d-none");
-        loadingAI.classList.remove("d-none");
 
-        // Kirim foto ke API Backend untuk inferensi model AI
-        const formData = new FormData();
-        formData.append("photo", file);
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/predictions`, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${token}`
-                },
-                body: formData
-            });
-
-            if (response.status === 401) {
-                handleUnauthorized();
-                return;
-            }
-
-            if (response.ok) {
-                const data = await response.json();
-                const prediction = data.prediction || {};
-                const rawCategory = (prediction.category || "").trim();
-                const confidence = typeof prediction.confidence === "number" ? prediction.confidence : 0;
-                const persen = Math.round(confidence * 100);
-
-                const displayLabelMap = {
-                    "AC": "AC",
-                    "KURSI": "Kursi",
-                    "LAMPU": "Lampu",
-                    "PROYEKTOR": "Proyektor"
-                };
-
-                const upperCategory = rawCategory.toUpperCase();
-                const displayLabel = displayLabelMap[upperCategory] || "";
-
-                // Simpan dalam format UPPERCASE
-                if (displayLabel) {
-                    lastAiCategory = upperCategory;
+        // Prediksi dijalankan SETELAH gambar selesai dimuat di HTML
+        previewImage.onload = async () => {
+            // JALANKAN PREDIKSI KE BACKEND SERVER-SIDE AI
+            loadingAI.classList.remove("d-none");
+            try {
+                const formData = new FormData();
+                formData.append("photo", file);  // `file` sudah tersedia dari e.target.files[0]
+                const response = await fetch(`${API_BASE_URL}/api/predictions`, {
+                    method: "POST",
+                    body: formData
+                    // Tidak perlu Authorization header — endpoint /api/predictions tidak memerlukan auth
+                    // Tidak perlu Content-Type — browser set multipart boundary otomatis
+                });
+                if (!response.ok) {
+                    throw new Error(`Server error: ${response.status}`);
                 }
-
-                teksSaranAI.innerHTML = `Saran AI: <strong>${displayLabel || rawCategory}</strong> (Keyakinan: ${persen}%)`;
-                
-                // Jika confidence >= 60%, sistem memilih otomatis di dropdown
-                if (confidence >= 0.6 && displayLabel) {
+                const result = await response.json();
+                // result.prediction = { category: "LAMPU", confidence: 0.92 }
+                const category = result.prediction.category;
+                const confidence = result.prediction.confidence;
+                const persen = (confidence * 100).toFixed(0);
+                teksSaranAI.innerHTML = `Saran AI: <strong>${category}</strong> (Keyakinan: ${persen}%)`;
+                if (confidence >= 0.6) {
                     alertSaranAI.className = "alert alert-custom alert-success py-3 px-4 mb-3 shadow-sm";
-                    
-                    // Cek apakah <option> di HTML memakai UPPERCASE atau Title Case
-                    const hasUpperOption = Boolean(kategoriFinal.querySelector(`option[value="${upperCategory}"]`));
-                    kategoriFinal.value = hasUpperOption ? upperCategory : displayLabel;
+                    kategoriFinal.value = category;
                 } else {
                     alertSaranAI.className = "alert alert-custom alert-warning py-3 px-4 mb-3 shadow-sm";
                     teksSaranAI.innerHTML += `<br><small class="text-dark">Sistem kurang yakin. Mohon periksa kembali pilihan kategori di bawah.</small>`;
-                    kategoriFinal.value = ""; 
+                    kategoriFinal.value = "";
                 }
-
                 alertSaranAI.classList.remove("d-none");
-            } else {
-                throw new Error(`Server merespons status ${response.status}`);
+            } catch (error) {
+                console.error("Kesalahan Prediksi AI:", error);
+                alertSaranAI.className = "alert alert-custom alert-danger py-3 px-4 mb-3 shadow-sm";
+                teksSaranAI.innerHTML = `Gagal memproses gambar dengan AI. Silakan pilih kategori secara manual.`;
+                alertSaranAI.classList.remove("d-none");
+            } finally {
+                loadingAI.classList.add("d-none");
+                kategoriContainer.classList.remove("d-none");
+                detailContainer.classList.remove("d-none");
             }
-
-        } catch (error) {
-            console.warn("Gagal memanggil API Prediksi AI:", error);
-            alertSaranAI.className = "alert alert-custom alert-warning py-3 px-4 mb-3 shadow-sm";
-            teksSaranAI.innerHTML = `Layanan AI sedang tidak tersedia. Silakan pilih kategori secara manual.`;
-            alertSaranAI.classList.remove("d-none");
-        } finally {
-            loadingAI.classList.add("d-none");
-            kategoriContainer.classList.remove("d-none");
-            detailContainer.classList.remove("d-none");
-        }
+        };
     });
 
     // --- LOGIKA KIRIM LAPORAN KE BACKEND ---
-    formLaporan.addEventListener("submit", async function(e) {
+    formLaporan.addEventListener("submit", async function (e) {
         e.preventDefault();
-        
+
         const file = fotoInput.files[0];
         const kategori = kategoriFinal.value;
         const lokasi = document.getElementById("lokasi").value.trim();
@@ -202,7 +169,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const response = await fetch(`${API_BASE_URL}/api/reports`, {
                 method: "POST",
                 headers: {
-                    "Authorization": `Bearer ${token}` 
+                    "Authorization": `Bearer ${token}`
                 },
                 body: formData
             });

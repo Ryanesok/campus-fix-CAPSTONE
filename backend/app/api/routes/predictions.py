@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 
 from app.ai.classifier import ImageClassifier, get_classifier
+from app.ai.policy import apply_prediction_policy
 from app.core.config import Settings, get_settings
 from app.schemas.prediction import PredictionResponse
 
@@ -28,5 +29,7 @@ async def predict(
         raise HTTPException(413, f"Ukuran foto maksimal {settings.max_upload_mb} MB.")
     if not _is_allowed_image(data):
         raise HTTPException(415, "Format foto harus JPEG, PNG, atau WebP.")
-    # Prediksi TIDAK membuat laporan permanen.
-    return PredictionResponse(prediction=classifier.predict(data))
+
+    raw_result = classifier.predict_raw(data)
+    prediction, _ = apply_prediction_policy(raw_result)
+    return PredictionResponse(prediction=prediction)

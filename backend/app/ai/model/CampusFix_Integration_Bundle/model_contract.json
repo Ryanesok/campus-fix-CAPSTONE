@@ -1,0 +1,32 @@
+{
+  "model_name": "CampusFix MobileNetV2 classifier",
+  "class_names": [
+    "AC",
+    "Kursi",
+    "Lampu",
+    "Proyektor"
+  ],
+  "label_index": {
+    "AC": 0,
+    "Kursi": 1,
+    "Lampu": 2,
+    "Proyektor": 3
+  },
+  "input_shape": [
+    null,
+    224,
+    224,
+    3
+  ],
+  "input_type": "float32",
+  "expected_input": "RGB pixels in 0..255, no normalization in browser before model",
+  "original_photo_preprocessing": "respect EXIF orientation; center letterbox using aspect-ratio-preserving resize to 224x224, pad RGB(128,128,128)",
+  "normalization": "built-in Rescaling(1/127.5, offset=-1) inside model (MobileNetV2)",
+  "output": "four softmax scores in class_names order; argmax is suggested facility category",
+  "limitations": [
+    "Predicts category of facility only, not damage or severity.",
+    "Unknown facilities still receive one of four softmax scores.",
+    "No group-aware splitting; independence of unit/location is not guaranteed.",
+    "Browser resizing via Canvas is not numerically identical to Pillow LANCZOS; check parity."
+  ]
+}

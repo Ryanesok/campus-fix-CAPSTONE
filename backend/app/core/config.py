@@ -8,10 +8,7 @@ _DEFAULT_ENV = _BACKEND_DIR / ".env"
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=_DEFAULT_ENV if _DEFAULT_ENV.exists() else ".env",
-        extra="ignore",
-    )
+    model_config = SettingsConfigDict(env_file=(".env", "backend/.env"), extra="ignore")
 
     app_env: str = "development"
     cors_origins: str = "http://localhost:5500"

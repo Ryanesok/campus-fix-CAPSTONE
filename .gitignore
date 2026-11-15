@@ -49,28 +49,12 @@ venv.bak/
 coverage.xml
 *.cover
 htmlcov/
-.mypy_cache/
-.ruff_cache/
-.tox/
-.nox/
-
-# ==========================================
-# Databases & Local Storage
-# ==========================================
-*.db
-*.sqlite
-*.sqlite3
-*.db-journal
-
-# ==========================================
-# AI / ML Datasets & Heavy Checkpoints
-# ==========================================
-backend/app/ai/models/
-backend/app/ai/datasets/
-ai/datasets/
-ai/data/
-datasets/
-data/
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+# AI artifacts and datasets
 *.pkl
 *.joblib
 *.h5

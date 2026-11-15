@@ -1,0 +1,25 @@
+{
+  "task": "classify_facility_type_not_damage",
+  "class_names": [
+    "AC",
+    "Kursi",
+    "Lampu",
+    "Proyektor"
+  ],
+  "image_size": [
+    224,
+    224
+  ],
+  "color_mode": "RGB",
+  "exif_orientation": "apply EXIF transpose before resizing",
+  "resize": "preserve aspect ratio, centered letterbox padding with Pillow ImageOps.pad",
+  "pad_color_rgb": [
+    128,
+    128,
+    128
+  ],
+  "saved_format": "JPEG, RGB uint8, 0..255",
+  "mobilenetv2_normalization": "tf.keras.applications.mobilenet_v2.preprocess_input exactly once in training/inference",
+  "data_augmentation": "none here; only training split in the model pipeline",
+  "note": "For deployed web inference, replicate RGB/EXIF/letterbox preprocessing."
+}
