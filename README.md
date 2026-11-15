@@ -17,6 +17,7 @@ Login → unggah/ambil foto → kategori otomatis tampil → isi lokasi, deskrip
 
 ## Struktur
 ```
+ai/        Modul & model AI terpisah (model/, ai_module/, predictor.py)
 backend/   API FastAPI (app/, tests/, alembic/)
 frontend/  Antarmuka web
 docs/      API, database, integrasi AI, panduan pengembangan
@@ -24,6 +25,30 @@ docs/      API, database, integrasi AI, panduan pengembangan
 
 Panduan integrasi lengkap untuk frontend dan tim AI tersedia di
 [`docs/FRONTEND_AI_HANDOFF.md`](docs/FRONTEND_AI_HANDOFF.md).
+
+## Menjalankan Aplikasi
+Jalankan satu perintah berikut di root proyek untuk menyalakan Backend & Frontend sekaligus:
+```bat
+run.bat
+```
+Atau jika menggunakan PowerShell:
+```powershell
+.\run.bat
+```
+Script ini akan:
+- Menjalankan server **Backend API** di `http://127.0.0.1:8000` (docs: `/docs`)
+- Menjalankan server **Frontend Web** di `http://127.0.0.1:5500`
+- Membuka halaman aplikasi di browser secara otomatis.
+
+## Pengujian Otomatis
+Jalankan satu perintah berikut di root proyek untuk menguji seluruh aplikasi:
+```bat
+test.bat
+```
+Atau jika menggunakan PowerShell:
+```powershell
+.\test.bat
+```
 
 ## Menjalankan backend
 ```bash

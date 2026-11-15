@@ -119,6 +119,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         const formData = new FormData();
         formData.append("photo", file);
         formData.append("category", kategori);
+        if (lastAiCategory) {
+            formData.append("ai_category", lastAiCategory);
+        }
         formData.append("location", lokasi);
         formData.append("description", deskripsi);
 
@@ -137,13 +140,14 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (response.ok) {
                 alert("Laporan berhasil dikirim! Terima kasih.");
                 formLaporan.reset();
+                lastAiCategory = null;
                 previewContainer.classList.add("d-none");
                 kategoriContainer.classList.add("d-none");
                 detailContainer.classList.add("d-none");
                 alertSaranAI.classList.add("d-none");
             } else {
                 const errorData = await response.json();
-                alert(`Gagal mengirim laporan: ${errorData.message || 'Kesalahan server'}`);
+                alert(`Gagal mengirim laporan: ${errorData.detail || errorData.message || 'Kesalahan server'}`);
             }
         } catch (error) {
             console.error("Error API Laporan:", error);
