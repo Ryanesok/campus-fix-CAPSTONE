@@ -39,6 +39,25 @@ const API_BASE_URL = "http://127.0.0.1:8000";
 
 let semuaDataLaporan = []; 
 
+function bukaLightboxAdmin(src) {
+    if (!src) return;
+    const lb = document.getElementById("lightboxFotoAdmin");
+    const img = document.getElementById("imgLightboxAdmin");
+    if (!lb || !img) return;
+
+    img.src = src;
+    lb.classList.remove("d-none");
+    lb.classList.add("d-flex");
+}
+
+function tutupLightboxAdmin() {
+    const lb = document.getElementById("lightboxFotoAdmin");
+    if (!lb) return;
+
+    lb.classList.add("d-none");
+    lb.classList.remove("d-flex");
+}
+
 document.addEventListener("DOMContentLoaded", () => {
 
     const token = localStorage.getItem("campusfix_token");
@@ -46,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     if (!token || role !== "admin") {
         alert("Akses ditolak! Anda bukan admin.");
-        window.location.href = "login.html";
+        window.location.href = LOGIN_PAGE_URL;
         return;
     }
 
@@ -74,8 +93,19 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btnLogout").addEventListener("click", () => {
         localStorage.removeItem("campusfix_token");
         localStorage.removeItem("campusfix_role");
-        window.location.href = "login.html";
+        localStorage.removeItem("campusfix_token_exp");
+        window.location.href = LOGIN_PAGE_URL;
     });
+
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+            const lb = document.getElementById("lightboxFotoAdmin");
+            if (lb && !lb.classList.contains("d-none")) {
+                e.stopPropagation();
+                tutupLightboxAdmin();
+            }
+        }
+    }, true);
 });
 
 function formatWaktuAdmin(isoString) {
@@ -166,9 +196,7 @@ async function ambilSemuaLaporan() {
         });
 
         if (response.status === 401) {
-            localStorage.removeItem("campusfix_token");
-            localStorage.removeItem("campusfix_role");
-            window.location.href = "login.html";
+            paksaLogoutSesiHabis();
             return;
         }
 
@@ -376,6 +404,11 @@ async function prosesPembaruanStatus(e) {
             },
             body: JSON.stringify(payload)
         });
+
+        if (response.status === 401) {
+            paksaLogoutSesiHabis();
+            return;
+        }
 
         if (response.ok) {
             if (document.activeElement) {

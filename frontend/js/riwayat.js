@@ -1,4 +1,4 @@
-// frontend/js/riwayat.js
+const API_BASE_URL = "http://127.0.0.1:8000";
 const LOGIN_PAGE_URL = "login.html";
 
 function cekSesiKedaluwarsa() {
@@ -24,7 +24,6 @@ function paksaLogoutSesiHabis() {
     window.location.href = `${LOGIN_PAGE_URL}?expired=1`;
 }
 
-// Jalankan pengecekan langsung saat halaman dibuka, setiap 15 detik, dan saat tab kembali aktif
 if (cekSesiKedaluwarsa()) {
     paksaLogoutSesiHabis();
 }
@@ -35,14 +34,12 @@ document.addEventListener("visibilitychange", () => {
     if (!document.hidden && cekSesiKedaluwarsa()) paksaLogoutSesiHabis();
 });
 
-const API_BASE_URL = "http://127.0.0.1:8000";
-
 document.addEventListener("DOMContentLoaded", () => {
     const token = localStorage.getItem("campusfix_token");
     const role = localStorage.getItem("campusfix_role");
 
     if (!token) {
-        window.location.href = "login.html";
+        window.location.href = LOGIN_PAGE_URL;
         return;
     }
 
@@ -53,6 +50,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     ambilRiwayatLaporan();
 });
+
+function bukaPreviewFoto(src) {
+    const modalEl = document.getElementById("modalPreviewFoto");
+    const imgEl = document.getElementById("imgPreviewPenuh");
+    if (!modalEl || !imgEl || !src) return;
+
+    imgEl.src = src;
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+}
 
 function formatWaktuLengkap(isoString) {
     if (!isoString) return "-";
@@ -158,9 +165,7 @@ async function ambilRiwayatLaporan() {
         });
 
         if (response.status === 401) {
-            localStorage.removeItem("campusfix_token");
-            localStorage.removeItem("campusfix_role");
-            window.location.href = "login.html";
+            paksaLogoutSesiHabis();
             return;
         }
 
@@ -245,8 +250,8 @@ function buatCardLaporan(report, meta) {
     return `
         <div class="card card-custom mb-4 overflow-hidden border">
             <div class="row g-0">
-                <div class="col-md-3">
-                    <img src="${fotoUrl}" onerror="this.onerror=null;this.src='https://placehold.co/300x200?text=Gagal+Memuat+Foto';" class="img-fluid w-100 img-laporan" alt="Foto Fasilitas">
+                <div class="col-md-3 img-laporan-wrapper">
+                    <img src="${fotoUrl}" onclick="bukaPreviewFoto(this.src)" title="Klik untuk memperbesar foto" onerror="this.onerror=null;this.src='https://placehold.co/300x200?text=Gagal+Memuat+Foto';" class="img-laporan" alt="Foto Fasilitas">
                 </div>
                 <div class="col-md-9 d-flex flex-column justify-content-center">
                     <div class="card-body p-4">
