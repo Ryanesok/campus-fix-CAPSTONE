@@ -40,17 +40,39 @@
             font-size: 0.85rem;
         }
 
-        .img-laporan {
-            height: 180px;
-            object-fit: cover;
+        .img-laporan-wrapper {
+            background-color: #eef2f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            min-height: 210px;
             border-top-left-radius: 1rem;
             border-bottom-left-radius: 1rem;
         }
 
+        .img-laporan {
+            width: 100%;
+            height: 100%;
+            max-height: 240px;
+            object-fit: contain;
+            cursor: zoom-in;
+            transition: transform 0.2s ease;
+        }
+
+        .img-laporan:hover {
+            transform: scale(1.02);
+        }
+
         @media (max-width: 767.98px) {
-            .img-laporan {
+            .img-laporan-wrapper {
                 border-bottom-left-radius: 0;
                 border-top-right-radius: 1rem;
+                min-height: 200px;
+            }
+
+            .img-laporan {
+                max-height: 260px;
             }
         }
     </style>
@@ -139,6 +161,23 @@
         </div>
     </div>
 
+    <!-- Modal Preview Full Foto -->
+    <div class="modal fade" id="modalPreviewFoto" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content bg-transparent border-0">
+                <div class="modal-header border-0 pb-1 justify-content-end">
+                    <button type="button" class="btn btn-dark rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 38px; height: 38px;" data-bs-dismiss="modal" aria-label="Close">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                <div class="modal-body text-center pt-0">
+                    <img src="" id="imgPreviewPenuh" class="img-fluid rounded-4 shadow" style="max-height: 80vh; object-fit: contain;" alt="Preview Foto Laporan">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="../js/riwayat.js"></script> 
 </body>
 </html>
