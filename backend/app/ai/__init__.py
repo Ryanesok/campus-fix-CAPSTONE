@@ -1,3 +1,4 @@
+# backend/app/ai/__init__.py
 from app.ai.loader import (
     get_default_model_path,
     get_model,

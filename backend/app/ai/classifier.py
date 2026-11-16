@@ -1,3 +1,4 @@
+# backend/app/ai/classifier.py
 from dataclasses import dataclass
 import logging
 import time
@@ -37,11 +38,6 @@ class RawInferenceResult:
     scores_by_class: Dict[str, float]
     ranked_predictions: List[RankedClassScore]
     inference_time_ms: float
-
-try:
-    from ai.predictor import get_facility_predictor
-except ImportError:
-    get_facility_predictor = None
 
 
 class ImageClassifier(Protocol):

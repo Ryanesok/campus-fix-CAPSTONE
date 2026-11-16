@@ -1,3 +1,4 @@
+# backend/app/ai/policy.py
 from dataclasses import dataclass
 from typing import Dict, List, Sequence
 from app.ai.classifier import FACILITY_CLASS_NAMES, RawInferenceResult
@@ -9,8 +10,8 @@ ALLOWED_REPORT_CATEGORIES: tuple[str, ...] = (*FACILITY_CLASS_NAMES, MANUAL_CATE
 # Empat kandidat threshold eksplorasi sesuai rencana eksperimen di threshold_policy.js
 CANDIDATE_THRESHOLDS: tuple[float, ...] = (0.50, 0.60, 0.70, 0.80)
 
-# Threshold aktif default (menyamai aturan 0.6 di app.js, bisa dipindah ke Settings/.env)
-DEFAULT_CONFIDENCE_THRESHOLD: float = 0.60
+# Threshold aktif default hasil kalibrasi (selaras dengan frontend/js/app.js)
+DEFAULT_CONFIDENCE_THRESHOLD: float = 0.70
 
 _CLASS_TO_ENUM: Dict[str, FacilityCategory] = {
     "AC": FacilityCategory.AC,
