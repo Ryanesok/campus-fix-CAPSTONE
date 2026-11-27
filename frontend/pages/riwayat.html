@@ -5,58 +5,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:,">
     <title>Dashboard Pelapor - CampusFix</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: #f4f7f6;
+        :root {
+            --ds-primary: #155E38;
+            --ds-primary-dark: #0F4A2C;
+            --ds-primary-soft: #E4F1E8;
+            --ds-secondary-gold: #C59B27;
+            --ds-bg-page: #F8FAFC;
+            --ds-surface: #FFFFFF;
+            --ds-text-main: #14261B;
+            --ds-text-muted: #44574B;
+            --ds-border: #D5E2DA;
+            --ds-status-new: #5E6E63;
+            --ds-status-warning: #A8540A;
+            --ds-status-process: #1C5DA8;
+            --ds-status-done: #1B7A43;
+            --ds-status-reject: #B3261E;
         }
-        
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--ds-bg-page);
+            color: var(--ds-text-main);
+            font-size: 14px;
+        }
+
+        /* Navbar */
+        .navbar-campusfix {
+            background-color: var(--ds-primary-dark);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .brand-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.12);
+            border: 2px solid var(--ds-secondary-gold);
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-nav-primary {
+            background-color: var(--ds-primary);
+            color: #FFFFFF;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 0.45rem 0.95rem;
+        }
+
+        .btn-nav-primary:hover {
+            background-color: #1a7244;
+            color: #FFFFFF;
+        }
+
+        /* Cards & Stats */
         .card-custom {
-            border: none;
-            border-radius: 1rem;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            background-color: var(--ds-surface);
+            border: 1px solid var(--ds-border);
+            border-radius: 16px;
+            box-shadow: 0 4px 16px rgba(20, 38, 27, 0.04);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         
         .card-custom:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(20, 38, 27, 0.08);
         }
 
         .stat-card {
-            border-radius: 1rem;
-            border: none;
-            color: #fff;
+            border-radius: 16px;
+            border: 1px solid var(--ds-border);
+            background-color: var(--ds-surface);
+            color: var(--ds-text-main);
+            box-shadow: 0 4px 14px rgba(20, 38, 27, 0.03);
+        }
+
+        .stat-card-total {
+            background-color: var(--ds-primary-dark);
+            border-color: var(--ds-primary-dark);
+            color: #FFFFFF;
+        }
+
+        .stat-icon-badge {
+            width: 34px;
+            height: 34px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
         }
 
         .status-badge {
-            border-radius: 50rem;
-            padding: 0.4rem 1rem;
-            font-weight: 500;
-            font-size: 0.85rem;
+            border-radius: 6px;
+            padding: 0.35rem 0.75rem;
+            font-weight: 600;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
         }
 
         .img-laporan-wrapper {
-            background-color: #eef2f6;
+            background-color: var(--ds-primary-soft);
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            min-height: 210px;
-            border-top-left-radius: 1rem;
-            border-bottom-left-radius: 1rem;
+            min-height: 215px;
+            border-top-left-radius: 16px;
+            border-bottom-left-radius: 16px;
+            border-right: 1px solid var(--ds-border);
         }
 
         .img-laporan {
             width: 100%;
             height: 100%;
-            max-height: 240px;
+            max-height: 245px;
             object-fit: contain;
             cursor: zoom-in;
             transition: transform 0.2s ease;
@@ -66,10 +143,27 @@
             transform: scale(1.02);
         }
 
+        .btn-ds-outline {
+            border: 1.5px solid var(--ds-primary);
+            color: var(--ds-primary);
+            background-color: transparent;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 0.5rem 1.25rem;
+        }
+
+        .btn-ds-outline:hover {
+            background-color: var(--ds-primary);
+            color: #FFFFFF;
+        }
+
         @media (max-width: 767.98px) {
             .img-laporan-wrapper {
                 border-bottom-left-radius: 0;
-                border-top-right-radius: 1rem;
+                border-top-right-radius: 16px;
+                border-right: none;
+                border-bottom: 1px solid var(--ds-border);
                 min-height: 200px;
             }
 
@@ -81,16 +175,17 @@
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4 py-3">
+    <nav class="navbar navbar-expand-lg navbar-campusfix mb-4 py-3">
         <div class="container">
-            <a class="navbar-brand fw-bold text-primary d-flex align-items-center" href="../index.html">
-                <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px;">
+            <a class="navbar-brand fw-bold text-white d-flex align-items-center mb-0" href="../index.html">
+                <div class="brand-avatar me-2">
                     <i class="bi bi-tools"></i>
                 </div>
-                CampusFix
+                <span>CampusFix</span>
             </a>
+
             <div class="d-flex">
-                <a href="../index.html" class="btn btn-primary btn-sm rounded-pill px-4 fw-medium">
+                <a href="../index.html" class="btn btn-nav-primary">
                     <i class="bi bi-plus-lg me-1"></i> Laporan Baru
                 </a>
             </div>
@@ -98,16 +193,17 @@
     </nav>
 
     <!-- Konten Utama Dashboard -->
-    <div class="container mb-5" style="max-width: 900px;">
+    <div class="container mb-5" style="max-width: 920px;">
         
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="fw-bold text-dark mb-0">Dashboard Laporan Saya</h4>
+        <div class="mb-4">
+            <h1 class="fw-bold mb-1" style="font-size: 28px; color: var(--ds-text-main);">Dashboard Laporan Saya</h1>
+            <p class="mb-0" style="font-size: 14px; color: var(--ds-text-muted);">Pantau status penanganan laporan kerusakan fasilitas yang telah Anda kirimkan.</p>
         </div>
 
         <!-- Indikator Loading Global -->
-        <div id="loadingData" class="text-center py-5 text-muted">
-            <div class="spinner-border text-primary mb-3" role="status"></div>
-            <p>Memuat data dashboard...</p>
+        <div id="loadingData" class="text-center py-5" style="color: var(--ds-text-muted);">
+            <div class="spinner-border mb-3" style="color: var(--ds-primary);" role="status"></div>
+            <p style="font-size: 14px;">Memuat data dashboard...</p>
         </div>
 
         <!-- Kontainer Dashboard -->
@@ -116,64 +212,76 @@
             <!-- Statistik Laporan -->
             <div class="row g-3 mb-4">
                 <div class="col-6 col-md-3">
-                    <div class="card stat-card bg-primary shadow-sm h-100">
-                        <div class="card-body">
-                            <h6 class="mb-1 fw-normal opacity-75"><i class="bi bi-files me-1"></i> Total</h6>
-                            <h3 class="fw-bold mb-0" id="statTotal">0</h3>
+                    <div class="card stat-card stat-card-total h-100">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span style="font-size: 13px; font-weight: 500; opacity: 0.9;">Total Laporan</span>
+                                <span class="stat-icon-badge" style="background-color: rgba(255,255,255,0.14); color: #FFFFFF;"><i class="bi bi-files"></i></span>
+                            </div>
+                            <h2 class="fw-bold mb-0" style="font-size: 28px;" id="statTotal">0</h2>
                         </div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
-                    <div class="card stat-card bg-warning shadow-sm h-100 text-dark">
-                        <div class="card-body">
-                            <h6 class="mb-1 fw-normal opacity-75"><i class="bi bi-hourglass-split me-1"></i> Diproses</h6>
-                            <h3 class="fw-bold mb-0" id="statProses">0</h3>
+                    <div class="card stat-card h-100">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span style="font-size: 13px; font-weight: 600; color: var(--ds-text-muted);">Diproses</span>
+                                <span class="stat-icon-badge" style="background-color: #E8F0FA; color: var(--ds-status-process);"><i class="bi bi-hourglass-split"></i></span>
+                            </div>
+                            <h2 class="fw-bold mb-0" style="font-size: 28px; color: var(--ds-status-process);" id="statProses">0</h2>
                         </div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
-                    <div class="card stat-card bg-success shadow-sm h-100">
-                        <div class="card-body">
-                            <h6 class="mb-1 fw-normal opacity-75"><i class="bi bi-check2-all me-1"></i> Selesai</h6>
-                            <h3 class="fw-bold mb-0" id="statSelesai">0</h3>
+                    <div class="card stat-card h-100">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span style="font-size: 13px; font-weight: 600; color: var(--ds-text-muted);">Selesai</span>
+                                <span class="stat-icon-badge" style="background-color: var(--ds-primary-soft); color: var(--ds-status-done);"><i class="bi bi-check2-all"></i></span>
+                            </div>
+                            <h2 class="fw-bold mb-0" style="font-size: 28px; color: var(--ds-status-done);" id="statSelesai">0</h2>
                         </div>
                     </div>
                 </div>
                 <div class="col-6 col-md-3">
-                    <div class="card stat-card bg-danger shadow-sm h-100">
-                        <div class="card-body">
-                            <h6 class="mb-1 fw-normal opacity-75"><i class="bi bi-x-circle me-1"></i> Ditolak</h6>
-                            <h3 class="fw-bold mb-0" id="statDitolak">0</h3>
+                    <div class="card stat-card h-100">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span style="font-size: 13px; font-weight: 600; color: var(--ds-text-muted);">Ditolak</span>
+                                <span class="stat-icon-badge" style="background-color: #FDECEA; color: var(--ds-status-reject);"><i class="bi bi-x-circle"></i></span>
+                            </div>
+                            <h2 class="fw-bold mb-0" style="font-size: 28px; color: var(--ds-status-reject);" id="statDitolak">0</h2>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Tampilan Jika Data Kosong -->
-            <div id="dataKosong" class="text-center py-5 d-none bg-white rounded-4 shadow-sm mb-4">
-                <i class="bi bi-inbox fs-1 text-muted mb-3 d-block"></i>
-                <h5 class="fw-bold text-dark">Belum Ada Laporan</h5>
-                <p class="text-muted mb-4">Kamu belum pernah membuat laporan kerusakan fasilitas.</p>
-                <a href="../index.html" class="btn btn-outline-primary rounded-pill px-4">Buat Laporan Pertama</a>
+            <div id="dataKosong" class="text-center py-5 d-none bg-white mb-4" style="border-radius: 16px; border: 1px solid var(--ds-border);">
+                <i class="bi bi-inbox fs-1 mb-3 d-block" style="color: var(--ds-text-muted);"></i>
+                <h3 class="fw-bold" style="font-size: 18px; color: var(--ds-text-main);">Belum Ada Laporan</h3>
+                <p class="mb-4" style="font-size: 14px; color: var(--ds-text-muted);">Anda belum pernah membuat laporan kerusakan fasilitas.</p>
+                <a href="../index.html" class="btn btn-ds-outline">Buat Laporan Pertama</a>
             </div>
 
-            <h5 class="fw-bold text-dark mb-3 mt-2">Riwayat Detail</h5>
+            <h2 class="fw-bold mb-3 mt-2" style="font-size: 18px; color: var(--ds-text-main);">Riwayat Detail</h2>
             <div id="listLaporan"></div>
             
         </div>
     </div>
 
-    <!-- Modal Preview Full Foto -->
+    <!-- Modal Preview Foto Penuh -->
     <div class="modal fade" id="modalPreviewFoto" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content bg-transparent border-0">
-                <div class="modal-header border-0 pb-1 justify-content-end">
-                    <button type="button" class="btn btn-dark rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 38px; height: 38px;" data-bs-dismiss="modal" aria-label="Close">
+                <div class="modal-header border-0 pb-2 justify-content-end">
+                    <button type="button" class="btn rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 38px; height: 38px; background-color: var(--ds-primary-dark); color: #FFFFFF;" data-bs-dismiss="modal" aria-label="Close">
                         <i class="bi bi-x-lg"></i>
                     </button>
                 </div>
                 <div class="modal-body text-center pt-0">
-                    <img src="" id="imgPreviewPenuh" class="img-fluid rounded-4 shadow" style="max-height: 80vh; object-fit: contain;" alt="Preview Foto Laporan">
+                    <img src="" id="imgPreviewPenuh" class="img-fluid shadow" style="max-height: 80vh; object-fit: contain; border-radius: 16px;" alt="Preview Foto Laporan">
                 </div>
             </div>
         </div>

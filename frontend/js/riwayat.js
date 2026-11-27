@@ -84,6 +84,7 @@ function formatWaktuLengkap(isoString) {
     return `${tanggal}, ${waktu} WIB`;
 }
 
+// Palet Warna Status sesuai Panduan Design System SuperApp
 function getStatusMeta(rawStatus) {
     const statusLower = rawStatus ? rawStatus.toLowerCase() : "pending";
 
@@ -91,8 +92,8 @@ function getStatusMeta(rawStatus) {
         return {
             key: "pending",
             group: "proses",
-            badgeClass: "bg-info text-dark",
-            iconClass: "bi-clock",
+            badgeStyle: "background-color: #5E6E63; color: #FFFFFF;",
+            iconClass: "bi-circle-fill",
             label: "Baru"
         };
     }
@@ -100,8 +101,8 @@ function getStatusMeta(rawStatus) {
         return {
             key: "accepted",
             group: "proses",
-            badgeClass: "bg-warning text-dark",
-            iconClass: "bi-gear-fill",
+            badgeStyle: "background-color: #1C5DA8; color: #FFFFFF;",
+            iconClass: "bi-arrow-repeat",
             label: "Diproses"
         };
     }
@@ -109,8 +110,8 @@ function getStatusMeta(rawStatus) {
         return {
             key: "completed",
             group: "selesai",
-            badgeClass: "bg-success",
-            iconClass: "bi-check2-all",
+            badgeStyle: "background-color: #1B7A43; color: #FFFFFF;",
+            iconClass: "bi-check-circle-fill",
             label: "Selesai"
         };
     }
@@ -118,8 +119,8 @@ function getStatusMeta(rawStatus) {
         return {
             key: "rejected",
             group: "ditolak",
-            badgeClass: "bg-danger",
-            iconClass: "bi-x-circle",
+            badgeStyle: "background-color: #B3261E; color: #FFFFFF;",
+            iconClass: "bi-x-circle-fill",
             label: "Ditolak"
         };
     }
@@ -127,8 +128,8 @@ function getStatusMeta(rawStatus) {
     return {
         key: statusLower,
         group: "proses",
-        badgeClass: "bg-secondary",
-        iconClass: "bi-circle",
+        badgeStyle: "background-color: #5E6E63; color: #FFFFFF;",
+        iconClass: "bi-circle-fill",
         label: rawStatus || "Baru"
     };
 }
@@ -216,7 +217,7 @@ async function ambilRiwayatLaporan() {
     } catch (error) {
         console.error("Error Fetching Reports:", error);
         loadingData.innerHTML = `
-            <div class="alert alert-danger rounded-4 py-4 text-center">
+            <div class="alert py-4 text-center" style="background-color: #FDECEA; color: #B3261E; border-radius: 16px; border: 1px solid #F5C2BE; font-size: 14px;">
                 <i class="bi bi-exclamation-triangle fs-3 d-block mb-2"></i>
                 ${error.message}
             </div>`;
@@ -232,50 +233,50 @@ function buatCardLaporan(report, meta) {
     let infoWaktuStatusHtml = "";
     if (meta.key === "accepted") {
         infoWaktuStatusHtml = `
-            <small class="text-primary fw-medium">
-                <i class="bi bi-gear me-1"></i> Diterima & Diproses: ${waktuUpdate}
-            </small>`;
+            <span style="font-size: 12px; color: #1C5DA8; font-weight: 600;">
+                <i class="bi bi-arrow-repeat me-1"></i> Diterima & Diproses: ${waktuUpdate}
+            </span>`;
     } else if (meta.key === "completed") {
         infoWaktuStatusHtml = `
-            <small class="text-success fw-medium">
-                <i class="bi bi-check-circle me-1"></i> Selesai: ${waktuUpdate}
-            </small>`;
+            <span style="font-size: 12px; color: #1B7A43; font-weight: 600;">
+                <i class="bi bi-check-circle-fill me-1"></i> Selesai: ${waktuUpdate}
+            </span>`;
     } else if (meta.key === "rejected") {
         infoWaktuStatusHtml = `
-            <small class="text-danger fw-medium">
-                <i class="bi bi-x-circle me-1"></i> Ditolak: ${waktuUpdate}
-            </small>`;
+            <span style="font-size: 12px; color: #B3261E; font-weight: 600;">
+                <i class="bi bi-x-circle-fill me-1"></i> Ditolak: ${waktuUpdate}
+            </span>`;
     }
 
     return `
-        <div class="card card-custom mb-4 overflow-hidden border">
+        <div class="card card-custom mb-4 overflow-hidden">
             <div class="row g-0">
                 <div class="col-md-3 img-laporan-wrapper">
                     <img src="${fotoUrl}" onclick="bukaPreviewFoto(this.src)" title="Klik untuk memperbesar foto" onerror="this.onerror=null;this.src='https://placehold.co/300x200?text=Gagal+Memuat+Foto';" class="img-laporan" alt="Foto Fasilitas">
                 </div>
                 <div class="col-md-9 d-flex flex-column justify-content-center">
                     <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="card-title fw-bold mb-0 text-dark">${kategori}</h5>
-                            <span class="badge status-badge ${meta.badgeClass}">
-                                <i class="bi ${meta.iconClass} me-1"></i> ${meta.label}
+                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                            <h3 class="card-title fw-bold mb-0" style="font-size: 18px; color: #14261B;">${kategori}</h3>
+                            <span class="status-badge" style="${meta.badgeStyle}">
+                                <i class="bi ${meta.iconClass}"></i> ${meta.label}
                             </span>
                         </div>
-                        <p class="text-primary small fw-medium mb-2">
+                        <p class="fw-semibold mb-2" style="font-size: 13px; color: #155E38;">
                             <i class="bi bi-geo-alt-fill me-1"></i> ${report.location || "-"}
                         </p>
-                        <p class="card-text mb-3 text-secondary" style="font-size: 0.95rem;">
+                        <p class="card-text mb-3" style="font-size: 14px; color: #44574B;">
                             ${report.description || "-"}
                         </p>
-                        <div class="d-flex flex-column gap-1 mt-auto pt-3 border-top">
-                            <small class="text-muted">
+                        <div class="d-flex flex-column gap-1 mt-auto pt-3" style="border-top: 1px solid #D5E2DA;">
+                            <span style="font-size: 12px; color: #44574B;">
                                 <i class="bi bi-clock-history me-1"></i> Dilaporkan: ${waktuDilaporkan}
-                            </small>
+                            </span>
                             ${infoWaktuStatusHtml}
                             ${report.admin_note ? `
-                            <small class="text-danger fw-medium mt-1" title="Alasan Penolakan/Catatan Admin">
+                            <span class="mt-1" style="font-size: 12px; color: #B3261E; font-weight: 600;" title="Alasan Penolakan/Catatan Admin">
                                 <i class="bi bi-exclamation-circle-fill me-1"></i> Alasan Penolakan: ${report.admin_note}
-                            </small>` : ""}
+                            </span>` : ""}
                         </div>
                     </div>
                 </div>
