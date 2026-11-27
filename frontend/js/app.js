@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const role = localStorage.getItem("campusfix_role");
 
     if (!token) {
-        window.location.href = "pages/login.html";
+        window.location.href = LOGIN_PAGE_URL;
         return;
     }
 
@@ -58,10 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Helper untuk menangani sesi habis (401)
     function handleUnauthorized() {
-        localStorage.removeItem("campusfix_token");
-        localStorage.removeItem("campusfix_role");
-        alert("Sesi login Anda telah berakhir. Silakan login kembali.");
-        window.location.href = "pages/login.html";
+        paksaLogoutSesiHabis();
     }
 
     // --- LOGIKA LOGOUT ---
@@ -70,7 +67,8 @@ document.addEventListener("DOMContentLoaded", () => {
         btnLogout.addEventListener("click", () => {
             localStorage.removeItem("campusfix_token");
             localStorage.removeItem("campusfix_role");
-            window.location.href = "pages/login.html";
+            localStorage.removeItem("campusfix_token_exp");
+            window.location.href = LOGIN_PAGE_URL;
         });
     }
 
@@ -163,20 +161,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
             teksSaranAI.innerHTML = `Saran AI: <strong>${displayLabel || rawCategory}</strong> (Keyakinan: ${persen}%)`;
 
+
             if (confidence >= 0.7 && displayLabel) {
-                alertSaranAI.className = "alert alert-custom alert-success py-3 px-4 mb-3 shadow-sm";
+                alertSaranAI.className = "alert alert-custom alert-ds-success py-3 px-3 mb-3";
                 const hasUpperOption = Boolean(kategoriFinal.querySelector(`option[value="${upperCategory}"]`));
                 kategoriFinal.value = hasUpperOption ? upperCategory : displayLabel;
             } else {
-                alertSaranAI.className = "alert alert-custom alert-warning py-3 px-4 mb-3 shadow-sm";
-                teksSaranAI.innerHTML += `<br><small class="text-dark">Sistem kurang yakin. Mohon periksa kembali pilihan kategori di bawah.</small>`;
+                alertSaranAI.className = "alert alert-custom alert-ds-warning py-3 px-3 mb-3";
+                teksSaranAI.innerHTML += `<br><span style="font-size: 12px; color: var(--ds-text-main);">Sistem kurang yakin. Mohon periksa kembali pilihan kategori di bawah.</span>`;
                 kategoriFinal.value = "";
             }
 
             alertSaranAI.classList.remove("d-none");
         } catch (error) {
             console.error("Kesalahan Prediksi AI:", error);
-            alertSaranAI.className = "alert alert-custom alert-danger py-3 px-4 mb-3 shadow-sm";
+            alertSaranAI.className = "alert alert-custom alert-ds-danger py-3 px-3 mb-3";
             teksSaranAI.innerHTML = `Gagal memproses gambar dengan AI. Silakan pilih kategori secara manual.`;
             alertSaranAI.classList.remove("d-none");
         } finally {
@@ -220,7 +219,7 @@ document.addEventListener("DOMContentLoaded", () => {
         formData.append("description", deskripsi);
 
         btnKirim.disabled = true;
-        btnKirim.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Mengirim...`;
+        btnKirim.innerHTML = `<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Mengirim...`;
 
         try {
             const response = await fetch(`${API_BASE_URL}/api/reports`, {

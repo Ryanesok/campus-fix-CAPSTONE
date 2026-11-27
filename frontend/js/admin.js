@@ -142,22 +142,52 @@ function formatWaktuAdmin(isoString) {
     };
 }
 
-// Status & badge UI
+// Palet Warna Status sesuai Panduan Design System SuperApp
 function getStatusMeta(rawStatus) {
     const statusLower = rawStatus ? rawStatus.toLowerCase() : "pending";
     if (statusLower === "pending" || statusLower === "baru") {
-        return { key: "pending", badgeClass: "bg-info text-dark", text: "Baru", isFinal: false };
+        return {
+            key: "pending",
+            badgeStyle: "background-color: #5E6E63; color: #FFFFFF;",
+            iconClass: "bi-circle-fill",
+            text: "Baru",
+            isFinal: false
+        };
     }
     if (statusLower === "accepted") {
-        return { key: "accepted", badgeClass: "bg-primary", text: "Diproses", isFinal: false };
+        return {
+            key: "accepted",
+            badgeStyle: "background-color: #1C5DA8; color: #FFFFFF;",
+            iconClass: "bi-arrow-repeat",
+            text: "Diproses",
+            isFinal: false
+        };
     }
     if (statusLower === "completed") {
-        return { key: "completed", badgeClass: "bg-success", text: "Selesai", isFinal: true };
+        return {
+            key: "completed",
+            badgeStyle: "background-color: #1B7A43; color: #FFFFFF;",
+            iconClass: "bi-check-circle-fill",
+            text: "Selesai",
+            isFinal: true
+        };
     }
     if (statusLower === "rejected") {
-        return { key: "rejected", badgeClass: "bg-danger", text: "Ditolak", isFinal: true };
+        return {
+            key: "rejected",
+            badgeStyle: "background-color: #B3261E; color: #FFFFFF;",
+            iconClass: "bi-x-circle-fill",
+            text: "Ditolak",
+            isFinal: true
+        };
     }
-    return { key: statusLower, badgeClass: "bg-secondary", text: rawStatus || "Baru", isFinal: false };
+    return {
+        key: statusLower,
+        badgeStyle: "background-color: #5E6E63; color: #FFFFFF;",
+        iconClass: "bi-circle-fill",
+        text: rawStatus || "Baru",
+        isFinal: false
+    };
 }
 
 // Resolusi URL foto
@@ -179,8 +209,8 @@ async function ambilSemuaLaporan() {
     
     tbodyLaporan.innerHTML = `
         <tr id="loadingRow">
-            <td colspan="5" class="text-center py-5 text-muted">
-                <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+            <td colspan="5" class="text-center py-5" style="color: #44574B;">
+                <div class="spinner-border spinner-border-sm mb-2" style="color: #155E38;" role="status"></div>
                 <br>Memuat data laporan...
             </td>
         </tr>
@@ -215,7 +245,7 @@ async function ambilSemuaLaporan() {
 
     } catch (error) {
         console.error("Error Fetching Admin Reports:", error);
-        tbodyLaporan.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-danger">Terjadi kesalahan saat memuat data.</td></tr>`;
+        tbodyLaporan.innerHTML = `<tr><td colspan="5" class="text-center py-4" style="color: #B3261E;">Terjadi kesalahan saat memuat data.</td></tr>`;
     }
 }
 
@@ -238,20 +268,24 @@ function renderTabel(dataArray) {
         const waktu = formatWaktuAdmin(report.created_at);
 
         const reportDataJson = encodeURIComponent(JSON.stringify(report));
-        const btnClass = statusMeta.isFinal ? "btn-outline-secondary" : "btn-outline-primary";
-        const btnLabel = statusMeta.isFinal ? "Detail" : "Proses";
+        const btnClass = statusMeta.isFinal ? "btn-ds-detail" : "btn-ds-primary";
+        const btnLabel = statusMeta.isFinal ? "Detail" : `Proses <i class="bi bi-arrow-right ms-1"></i>`;
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
-            <td class="px-4 small">
-                <div class="fw-medium text-dark">${waktu.singkat}</div>
-                <div class="text-muted" style="font-size: 0.78rem;">${waktu.jam}</div>
+            <td class="px-4">
+                <div class="fw-semibold" style="color: #14261B; font-size: 13px;">${waktu.singkat}</div>
+                <div style="color: #44574B; font-size: 12px;">${waktu.jam}</div>
             </td>
-            <td class="fw-medium text-dark">${report.category || "-"}</td>
-            <td class="small text-secondary text-truncate" style="max-width: 200px;">${report.location || "-"}</td>
-            <td><span class="badge status-badge ${statusMeta.badgeClass}">${statusMeta.text}</span></td>
+            <td class="fw-semibold" style="color: #14261B;">${report.category || "-"}</td>
+            <td class="text-truncate" style="max-width: 220px; color: #44574B; font-size: 13px;">${report.location || "-"}</td>
+            <td>
+                <span class="status-badge" style="${statusMeta.badgeStyle}">
+                    <i class="bi ${statusMeta.iconClass}"></i> ${statusMeta.text}
+                </span>
+            </td>
             <td class="px-4 text-end">
-                <button class="btn btn-sm ${btnClass} rounded-pill px-3" onclick="bukaModalProses('${reportDataJson}')">
+                <button class="btn btn-sm ${btnClass} px-3 py-1" onclick="bukaModalProses('${reportDataJson}')">
                     ${btnLabel}
                 </button>
             </td>
@@ -310,8 +344,9 @@ function bukaModalProses(reportDataEncoded) {
     }
 
     const badgeEl = document.getElementById("modalStatusBadge");
-    badgeEl.className = `badge status-badge ${statusMeta.badgeClass}`;
-    badgeEl.textContent = statusMeta.text;
+    badgeEl.className = "status-badge";
+    badgeEl.setAttribute("style", statusMeta.badgeStyle);
+    badgeEl.innerHTML = `<i class="bi ${statusMeta.iconClass}"></i> ${statusMeta.text}`;
 
     // Tampilkan alasan penolakan jika status Ditolak
     const modalWadahAlasan = document.getElementById("modalWadahAlasanTolak");
@@ -429,7 +464,8 @@ async function prosesPembaruanStatus(e) {
 
     } catch (error) {
         console.error("Update Status Error:", error);
-        alertProses.className = "alert alert-danger py-2 small mb-3";
+        alertProses.className = "alert py-2 mb-3";
+        alertProses.setAttribute("style", "background-color: #FDECEA; color: #B3261E; border: 1px solid #F5C2BE; border-radius: 10px; font-size: 13px;");
         alertProses.textContent = error.message;
         alertProses.classList.remove("d-none");
     } finally {

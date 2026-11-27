@@ -35,7 +35,6 @@ function isStoredSessionExpired() {
     const expMs = jwtExp || savedExp;
 
     if (!expMs) return false;
-    // Beri buffer 10 detik sebelum benar-benar habis agar request API tidak gagal di tengah jalan
     return Date.now() >= (expMs - 10000);
 }
 
@@ -60,13 +59,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (params.get("expired") === "1") {
         clearAuthSession();
         window.history.replaceState({}, document.title, window.location.pathname);
-        loginAlert.className = "alert alert-warning py-2 text-center small rounded-3";
+        loginAlert.className = "alert alert-ds alert-warning py-2 text-center";
         loginAlert.textContent = "Sesi login Anda telah berakhir karena tidak aktif terlalu lama. Silakan masuk kembali.";
         loginAlert.classList.remove("d-none");
     } else if (existingToken) {
         if (isStoredSessionExpired()) {
             clearAuthSession();
-            loginAlert.className = "alert alert-warning py-2 text-center small rounded-3";
+            loginAlert.className = "alert alert-ds alert-warning py-2 text-center";
             loginAlert.textContent = "Sesi login Anda telah berakhir. Silakan masuk kembali.";
             loginAlert.classList.remove("d-none");
         } else {
@@ -106,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 localStorage.setItem("campusfix_role", role);
                 localStorage.setItem("campusfix_token_exp", String(expMs));
                 
-                loginAlert.className = "alert alert-success py-2 text-center small rounded-3";
+                loginAlert.className = "alert alert-ds alert-success py-2 text-center";
                 loginAlert.textContent = "Login berhasil! Mengalihkan...";
                 loginAlert.classList.remove("d-none");
 
@@ -118,13 +117,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }, 800);
             } else {
-                loginAlert.className = "alert alert-danger py-2 text-center small rounded-3";
+                loginAlert.className = "alert alert-ds alert-danger py-2 text-center";
                 loginAlert.textContent = extractApiError(data, "Email atau password salah!");
                 loginAlert.classList.remove("d-none");
             }
         } catch (error) {
             console.error("Error Login:", error);
-            loginAlert.className = "alert alert-danger py-2 text-center small rounded-3";
+            loginAlert.className = "alert alert-ds alert-danger py-2 text-center";
             loginAlert.textContent = "Gagal terhubung ke server. Pastikan backend aktif.";
             loginAlert.classList.remove("d-none");
         } finally {
@@ -157,18 +156,18 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await response.json().catch(() => ({}));
 
             if (response.ok) {
-                registerAlert.className = "alert alert-success py-2 text-center small rounded-3";
-                registerAlert.innerHTML = `Pendaftaran berhasil! Silakan <a href="#" onclick="document.getElementById('login-tab').click()">Masuk di sini</a>.`;
+                registerAlert.className = "alert alert-ds alert-success py-2 text-center";
+                registerAlert.innerHTML = `Pendaftaran berhasil! Silakan <a href="#" style="color: #155E38; font-weight: 700;" onclick="document.getElementById('login-tab').click()">Masuk di sini</a>.`;
                 registerAlert.classList.remove("d-none");
                 formRegister.reset();
             } else {
-                registerAlert.className = "alert alert-danger py-2 text-center small rounded-3";
+                registerAlert.className = "alert alert-ds alert-danger py-2 text-center";
                 registerAlert.textContent = extractApiError(data, "Gagal mendaftar. Email mungkin sudah digunakan.");
                 registerAlert.classList.remove("d-none");
             }
         } catch (error) {
             console.error("Error Register:", error);
-            registerAlert.className = "alert alert-danger py-2 text-center small rounded-3";
+            registerAlert.className = "alert alert-ds alert-danger py-2 text-center";
             registerAlert.textContent = "Gagal terhubung ke server.";
             registerAlert.classList.remove("d-none");
         } finally {
